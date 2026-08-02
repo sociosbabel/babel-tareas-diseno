@@ -56,6 +56,7 @@
   .field{margin-bottom:12px;}
   .field label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:4px;font-family:'Archivo',sans-serif;font-weight:600;}
   .field input, .field select, .field textarea{width:100%;background:var(--bg);border:1px solid #2a3a5c;color:var(--txt);padding:9px 10px;border-radius:8px;font-size:.88rem;font-family:'Archivo',sans-serif;}
+  .field input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer;}
   .field textarea{resize:vertical;min-height:60px;}
   .modal-actions{display:flex;justify-content:space-between;gap:8px;margin-top:16px;}
   .modal-actions .right{display:flex;gap:8px;}
@@ -76,6 +77,15 @@
   .gantt-bar{position:absolute;top:2px;bottom:2px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:#0d1420;display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden;font-weight:700;}
   .gantt-header{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);margin-bottom:10px;padding:0 0 6px;border-bottom:1px solid #24314f;}
   .gantt-today{position:absolute;top:0;bottom:0;width:2px;background:var(--gold2);}
+  .stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+  .stat-card{background:var(--card);border:1px solid #24314f;border-radius:12px;padding:12px 16px;min-width:104px;text-align:center;}
+  .stat-card.total{border-color:var(--gold);}
+  .stat-card .num{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--gold2);}
+  .stat-card .lbl{font-size:.68rem;color:var(--muted);margin-top:2px;font-family:'Archivo',sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.02em;}
+  .ejec-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+  .ejec-filters select{background:var(--card);border:1px solid #2a3a5c;color:var(--txt);padding:8px 10px;border-radius:8px;font-size:.85rem;font-family:'Archivo',sans-serif;}
+  .card .tarea-num{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--gold2);font-weight:700;}
+  .card .fechas-flow{font-size:.72rem;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace;}
   .gantt-wrap{position:relative;background:var(--card2);border:1px solid #24314f;border-radius:12px;padding:16px;}
 </style>
 </head>
@@ -114,6 +124,7 @@
     <button class="btn secondary" id="refreshBtn">↻</button>
   </div>
 
+  <div id="ejecPanel" style="display:none;"></div>
   <div id="list"></div>
   <div id="ganttView" style="display:none;"></div>
   <div class="status-note" id="connStatus">Conectando con Firestore…</div>
@@ -164,7 +175,7 @@
     <div class="field">
       <label>Asignado</label>
       <select id="f_asignado">
-        <option>Diseñador</option>
+        <option>Rolando</option>
         <option>Vito</option>
         <option>Gonzalo</option>
       </select>
@@ -189,6 +200,24 @@
         <option>Aprobada</option>
         <option>Ejecutada</option>
       </select>
+    </div>
+    <div class="field">
+      <label>Método de ejecución (obligatorio para pasar a Aprobada)</label>
+      <select id="f_metodo">
+        <option value="">-- Elegir --</option>
+        <option>Imprimir</option>
+        <option>Plastificar</option>
+        <option>Imprimir y plastificar</option>
+        <option>Plotter de corte</option>
+        <option>Web</option>
+        <option>Publicar</option>
+        <option>Subir/cargar</option>
+        <option>Otro</option>
+      </select>
+    </div>
+    <div class="field" id="metodoOtroWrap" style="display:none;">
+      <label>Especificar método (opcional)</label>
+      <input type="text" id="f_metodoOtro" placeholder="Ej: enviar a proveedor externo">
     </div>
     <div class="field" id="detalleWrap">
       <label>Detalle de lo pendiente (imprenta, subir a la web, plastificar, etc.)</label>
@@ -235,12 +264,19 @@ const WA = {
 };
 
 const FLOW = ["Pendiente", "En revisión", "Aprobada", "Ejecutada"];
+const EXEC_METHODS = ["Imprimir", "Plastificar", "Imprimir y plastificar", "Plotter de corte", "Web", "Publicar", "Subir/cargar", "Otro"];
 
 let allTareas = [];
 let editingId = null;
+let editingFechaAprobada = "";
+let editingFechaEjecutada = "";
+let editingCreatedAt = 0;
 let currentTab = "Pendiente";
 let currentLinks = [];
 let pollTimer = null;
+let ejecFiltroAnio = "";
+let ejecFiltroMes = "";
+let forzarEstadoAprobada = false;
 
 const $ = (id) => document.getElementById(id);
 
@@ -315,6 +351,9 @@ function fmtFecha(iso){
   const [y,m,d] = iso.split("-");
   return `${d}/${m}/${y}`;
 }
+function todayISO(){
+  return new Date().toISOString().slice(0,10);
+}
 function showToast(msg){
   const t = $("toast");
   t.textContent = msg;
@@ -377,13 +416,87 @@ function matchesTab(t){
   if(currentTab === "todas") return true;
   return t.estado === currentTab;
 }
+function computeTareaNumeros(){
+  const ejecutadas = allTareas.filter(t => t.estado === "Ejecutada");
+  const porAsignado = {};
+  ejecutadas.forEach(t=>{
+    const k = t.asignado || "Sin asignar";
+    (porAsignado[k] = porAsignado[k] || []).push(t);
+  });
+  const map = {};
+  Object.keys(porAsignado).forEach(k=>{
+    const arr = porAsignado[k].slice().sort((a,b)=>{
+      const fa = a.fechaEjecutada || "9999-99-99", fb = b.fechaEjecutada || "9999-99-99";
+      if(fa !== fb) return fa < fb ? -1 : 1;
+      return (a.createdAt||0) - (b.createdAt||0);
+    });
+    arr.forEach((t,i)=>{ map[t.id] = i+1; });
+  });
+  return map;
+}
+const MESES_EJEC = [
+  {v:"01",l:"Enero"},{v:"02",l:"Febrero"},{v:"03",l:"Marzo"},{v:"04",l:"Abril"},
+  {v:"05",l:"Mayo"},{v:"06",l:"Junio"},{v:"07",l:"Julio"},{v:"08",l:"Agosto"},
+  {v:"09",l:"Septiembre"},{v:"10",l:"Octubre"},{v:"11",l:"Noviembre"},{v:"12",l:"Diciembre"}
+];
+function renderEjecPanel(){
+  const panel = $("ejecPanel");
+  if(currentTab !== "Ejecutada"){
+    panel.style.display = "none";
+    return null;
+  }
+  panel.style.display = "block";
+  const ejecutadas = allTareas.filter(t => t.estado === "Ejecutada");
+  const anios = new Set();
+  ejecutadas.forEach(t=>{
+    const f = t.fechaEjecutada || t.fechaLimite;
+    if(f) anios.add(f.slice(0,4));
+  });
+  const aniosOrdenados = Array.from(anios).sort().reverse();
+
+  const filtradas = ejecutadas.filter(t=>{
+    const f = t.fechaEjecutada || t.fechaLimite || "";
+    if(ejecFiltroAnio && f.slice(0,4) !== ejecFiltroAnio) return false;
+    if(ejecFiltroMes && f.slice(5,7) !== ejecFiltroMes) return false;
+    return true;
+  });
+
+  const porAsignado = {};
+  filtradas.forEach(t=>{
+    const k = t.asignado || "Sin asignar";
+    porAsignado[k] = (porAsignado[k]||0) + 1;
+  });
+  const nombres = Object.keys(porAsignado).sort();
+  const cards = nombres.map(n => `<div class="stat-card"><div class="num">${porAsignado[n]}</div><div class="lbl">${esc(n)}</div></div>`).join("");
+
+  panel.innerHTML = `
+    <div class="ejec-filters">
+      <select id="filtroAnio">
+        <option value="">Todos los años</option>
+        ${aniosOrdenados.map(a=>`<option value="${a}" ${a===ejecFiltroAnio?"selected":""}>${a}</option>`).join("")}
+      </select>
+      <select id="filtroMes">
+        <option value="">Todos los meses</option>
+        ${MESES_EJEC.map(m=>`<option value="${m.v}" ${m.v===ejecFiltroMes?"selected":""}>${m.l}</option>`).join("")}
+      </select>
+    </div>
+    <div class="stats-row">${cards}<div class="stat-card total"><div class="num">${filtradas.length}</div><div class="lbl">Total</div></div></div>`;
+
+  $("filtroAnio").addEventListener("change", (e)=>{ ejecFiltroAnio = e.target.value; render(); });
+  $("filtroMes").addEventListener("change", (e)=>{ ejecFiltroMes = e.target.value; render(); });
+
+  return new Set(filtradas.map(t=>t.id));
+}
 function render(){
   const q = ($("search").value || "").toLowerCase().trim();
   const tipoF = $("filterTipo").value;
   const list = $("list");
+  const ejecIds = renderEjecPanel();
+  const numeros = computeTareaNumeros();
 
   let items = allTareas.filter(t=>{
     if(!matchesTab(t)) return false;
+    if(ejecIds && !ejecIds.has(t.id)) return false;
     if(tipoF && t.tipo !== tipoF) return false;
     if(q && !(`${t.titulo||""} ${t.descripcion||""}`.toLowerCase().includes(q))) return false;
     return true;
@@ -414,6 +527,13 @@ function render(){
       linkHtml = links.map(l => `<a class="link-chip" href="${escAttr(l.url)}" target="_blank" rel="noopener">🔗 ${esc(l.label||"Link")}</a>`).join(" · ");
     }
     const detalle = (t.estado === "Aprobada" && t.detallePendiente) ? `<div class="detalle">Falta: ${esc(t.detallePendiente)}</div>` : "";
+    const metodoTxt = t.metodoEjecucion ? (t.metodoEjecucion === "Otro" && t.metodoEjecucionOtro ? `Otro — ${t.metodoEjecucionOtro}` : t.metodoEjecucion) : "";
+    const lineasFecha = [];
+    if(t.fechaAprobada) lineasFecha.push(`Aprobada: ${fmtFecha(t.fechaAprobada)}`);
+    if(t.fechaEjecutada) lineasFecha.push(`Ejecutada: ${fmtFecha(t.fechaEjecutada)}`);
+    if(metodoTxt && (t.estado === "Aprobada" || t.estado === "Ejecutada")) lineasFecha.push(`Método: ${esc(metodoTxt)}`);
+    const fechasFlow = lineasFecha.length ? `<div class="fechas-flow">${lineasFecha.join(" · ")}</div>` : "";
+    const tareaNum = (t.estado === "Ejecutada" && numeros[t.id]) ? `<div class="tarea-num">Tarea Nº ${numeros[t.id]} de ${esc(t.asignado||"")}</div>` : "";
     const nextActions = renderActions(t);
     return `
       <div class="card" data-id="${t.id}">
@@ -421,6 +541,8 @@ function render(){
         <div class="meta">
           ${badgeEstado} ${badgePrio} <span>${esc(t.tipo||"")}</span> <span>${esc(t.asignado||"")}</span> ${fecha ? "· "+fecha : ""}
         </div>
+        ${tareaNum}
+        ${fechasFlow}
         ${t.descripcion ? `<p>${esc(t.descripcion)}</p>` : ""}
         ${detalle}
         <div class="actions">
@@ -495,7 +617,8 @@ function renderActions(t){
   const idx = FLOW.indexOf(t.estado);
   if(idx >= 0 && idx < FLOW.length-1){
     const next = FLOW[idx+1];
-    return `<button onclick="advance('${t.id}','${next}')">✓ Pasar a ${next}</button>`;
+    const label = (next === "Aprobada") ? "✓ Elegir método y aprobar" : `✓ Pasar a ${next}`;
+    return `<button onclick="advance('${t.id}','${next}')">${label}</button>`;
   }
   return "";
 }
@@ -504,7 +627,14 @@ function escAttr(s){ return esc(s); }
 async function advance(id, nextEstado){
   const t = allTareas.find(x=>x.id===id);
   if(!t) return;
-  await fsUpdate(id, {...stripId(t), estado: nextEstado, updatedAt: Date.now()});
+  if(nextEstado === "Aprobada"){
+    // El método de ejecución es obligatorio para pasar a Aprobada — se pide en el modal.
+    openEdit(id, "Aprobada");
+    return;
+  }
+  const extra = {};
+  if(nextEstado === "Ejecutada") extra.fechaEjecutada = t.fechaEjecutada || todayISO();
+  await fsUpdate(id, {...stripId(t), estado: nextEstado, updatedAt: Date.now(), ...extra});
   showToast(`"${t.titulo}" → ${nextEstado}`);
   sendWA(`📐 Babel Diseño: "${t.titulo}" pasó a *${nextEstado}*.`);
   loadData();
@@ -527,6 +657,7 @@ document.querySelectorAll(".tab").forEach(tab=>{
     if(currentTab === "gantt"){
       $("toolbarNormal").style.display = "none";
       $("list").style.display = "none";
+      $("ejecPanel").style.display = "none";
       $("ganttView").style.display = "block";
       renderGantt();
     } else {
@@ -612,42 +743,62 @@ function resetForm(){
   $("f_titulo").value = "";
   $("f_tipo").value = "Flyer";
   $("f_descripcion").value = "";
-  $("f_asignado").value = "Diseñador";
+  $("f_asignado").value = "Rolando";
   $("f_prioridad").value = "Media";
   $("f_fecha").value = "";
   $("f_estado").value = "Pendiente";
+  $("f_metodo").value = "";
+  $("f_metodoOtro").value = "";
+  $("metodoOtroWrap").style.display = "none";
   $("f_detalle").value = "";
   $("f_notas").value = "";
   currentLinks = [];
+  editingFechaAprobada = "";
+  editingFechaEjecutada = "";
+  editingCreatedAt = 0;
   renderLinksList();
 }
 
+$("f_metodo").addEventListener("change", ()=>{
+  $("metodoOtroWrap").style.display = ($("f_metodo").value === "Otro") ? "block" : "none";
+});
+
 $("newBtn").addEventListener("click", ()=>{
   editingId = null;
+  forzarEstadoAprobada = false;
   resetForm();
   $("modalTitle").textContent = "Nueva tarea";
   $("deleteBtn").style.display = "none";
   $("modalBg").classList.add("open");
 });
 
-function openEdit(id){
+function openEdit(id, forceEstado){
   const t = allTareas.find(x=>x.id===id);
   if(!t) return;
   editingId = id;
   $("f_titulo").value = t.titulo || "";
   $("f_tipo").value = t.tipo || "Flyer";
   $("f_descripcion").value = t.descripcion || "";
-  $("f_asignado").value = t.asignado || "Diseñador";
+  $("f_asignado").value = t.asignado || "Rolando";
   $("f_prioridad").value = t.prioridad || "Media";
   $("f_fecha").value = t.fechaLimite || "";
-  $("f_estado").value = t.estado || "Pendiente";
+  $("f_estado").value = forceEstado || t.estado || "Pendiente";
+  $("f_metodo").value = t.metodoEjecucion || "";
+  $("f_metodoOtro").value = t.metodoEjecucionOtro || "";
+  $("metodoOtroWrap").style.display = ($("f_metodo").value === "Otro") ? "block" : "none";
   $("f_detalle").value = t.detallePendiente || "";
   $("f_notas").value = t.notas || "";
   currentLinks = Array.isArray(t.links) ? JSON.parse(JSON.stringify(t.links)) : [];
+  editingFechaAprobada = t.fechaAprobada || "";
+  editingFechaEjecutada = t.fechaEjecutada || "";
+  editingCreatedAt = t.createdAt || 0;
   renderLinksList();
   $("modalTitle").textContent = "Editar tarea";
   $("deleteBtn").style.display = "inline-block";
   $("modalBg").classList.add("open");
+  if(forceEstado === "Aprobada" && !t.metodoEjecucion){
+    showToast("Elegí el método de ejecución para aprobar la tarea");
+  }
 }
 
 $("cancelBtn").addEventListener("click", ()=> $("modalBg").classList.remove("open"));
@@ -656,6 +807,16 @@ $("modalBg").addEventListener("click", (e)=>{ if(e.target.id==="modalBg") $("mod
 $("saveBtn").addEventListener("click", async ()=>{
   const titulo = $("f_titulo").value.trim();
   if(!titulo){ showToast("Falta el título"); return; }
+  const estado = $("f_estado").value;
+  const metodoEjecucion = $("f_metodo").value;
+  if((estado === "Aprobada" || estado === "Ejecutada") && !metodoEjecucion){
+    showToast("Elegí el método de ejecución antes de aprobar la tarea");
+    return;
+  }
+  let fechaAprobada = editingFechaAprobada;
+  if(!fechaAprobada && (estado === "Aprobada" || estado === "Ejecutada")) fechaAprobada = todayISO();
+  let fechaEjecutada = editingFechaEjecutada;
+  if(!fechaEjecutada && estado === "Ejecutada") fechaEjecutada = todayISO();
   const data = {
     titulo,
     tipo: $("f_tipo").value,
@@ -664,7 +825,11 @@ $("saveBtn").addEventListener("click", async ()=>{
     asignado: $("f_asignado").value,
     prioridad: $("f_prioridad").value,
     fechaLimite: $("f_fecha").value,
-    estado: $("f_estado").value,
+    estado,
+    metodoEjecucion,
+    metodoEjecucionOtro: (metodoEjecucion === "Otro") ? $("f_metodoOtro").value.trim() : "",
+    fechaAprobada,
+    fechaEjecutada,
     detallePendiente: $("f_detalle").value.trim(),
     notas: $("f_notas").value.trim(),
     updatedAt: Date.now(),
@@ -673,6 +838,7 @@ $("saveBtn").addEventListener("click", async ()=>{
   if(editingId){
     const prev = allTareas.find(x=>x.id===editingId);
     const estadoCambio = prev && prev.estado !== data.estado;
+    data.createdAt = editingCreatedAt || Date.now();
     await fsUpdate(editingId, data);
     showToast("Tarea actualizada");
     if(estadoCambio){
