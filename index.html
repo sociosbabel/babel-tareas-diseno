@@ -86,6 +86,19 @@
   .ejec-filters select{background:var(--card);border:1px solid #2a3a5c;color:var(--txt);padding:8px 10px;border-radius:8px;font-size:.85rem;font-family:'Archivo',sans-serif;}
   .card .tarea-num{font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--gold2);font-weight:700;}
   .card .fechas-flow{font-size:.72rem;color:var(--muted);margin-top:4px;font-family:'JetBrains Mono',monospace;}
+  .inf-filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+  .inf-filtros select{background:var(--card);color:var(--txt);border:1px solid #24314f;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:.8rem;}
+  .inf-bloque{background:var(--card2);border:1px solid #24314f;border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+  .inf-bloque h4{margin:0 0 4px;font:700 .95rem/1.3 'Quattrocento',Georgia,serif;color:var(--gold2);}
+  .inf-bloque .ayuda{margin:0 0 12px;font-size:.72rem;color:var(--muted);line-height:1.5;}
+  table.inf{width:100%;border-collapse:collapse;font-size:.76rem;}
+  table.inf th,table.inf td{padding:5px 6px;text-align:right;border-bottom:1px solid #22304d;white-space:nowrap;}
+  table.inf th{color:var(--muted);font-weight:700;font-size:.66rem;text-transform:uppercase;letter-spacing:.04em;}
+  table.inf th:first-child,table.inf td:first-child{text-align:left;font-weight:700;}
+  table.inf tr:last-child td{border-bottom:none;}
+  table.inf tr.total td{border-top:1px solid #35456b;font-weight:700;color:var(--gold2);}
+  table.inf .buena{color:var(--eje);} table.inf .mala{color:var(--vencida,#c0554a);} table.inf .neutra{color:var(--muted);}
+  .inf-scroll{overflow-x:auto;}
   .gantt-wrap{position:relative;background:var(--card2);border:1px solid #24314f;border-radius:12px;padding:16px;}
 
   /* --- vencidas --- */
@@ -132,6 +145,15 @@
   .doc-chip{gap:8px;}
   .bajar-todo{margin-top:8px;}
   .bajar-todo .btn-bajar{width:auto;padding:6px 14px;font-size:.74rem;}
+
+  .tab{display:inline-flex;align-items:center;gap:7px;}
+  .tab-num{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
+    padding:0 5px;border-radius:999px;background:#2a3a5c;color:var(--muted);
+    font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.62rem;font-weight:700;line-height:1;}
+  .tab.active .tab-num{background:rgba(26,20,8,.22);color:#1a1408;}
+  .tab-num.hay-vencidas{background:var(--danger);color:#fff;}
+  .tab.active .tab-num.hay-vencidas{background:#8f3a32;color:#fff;}
+  .tab-num.cero{opacity:.45;}
 </style>
 </head>
 <body>
@@ -143,12 +165,13 @@
 
 <div class="wrap">
   <div class="tabs" id="tabs">
-    <div class="tab active" data-f="Pendiente">Pendiente</div>
-    <div class="tab" data-f="En revisión">En revisión</div>
-    <div class="tab" data-f="Aprobada">Aprobada</div>
-    <div class="tab" data-f="Ejecutada">Ejecutada</div>
-    <div class="tab" data-f="todas">Todas</div>
+    <div class="tab active" data-f="Pendiente">Pendiente<span class="tab-num" id="num-Pendiente">0</span></div>
+    <div class="tab" data-f="En revisión">En revisión<span class="tab-num" id="num-En-revisión">0</span></div>
+    <div class="tab" data-f="Aprobada">Aprobada<span class="tab-num" id="num-Aprobada">0</span></div>
+    <div class="tab" data-f="Ejecutada">Ejecutada<span class="tab-num" id="num-Ejecutada">0</span></div>
+    <div class="tab" data-f="todas">Todas<span class="tab-num" id="num-todas">0</span></div>
     <div class="tab" data-f="gantt">📊 Carta Gantt</div>
+    <div class="tab" data-f="informe">📈 Informe</div>
   </div>
 
   <div class="toolbar" id="toolbarNormal">
@@ -170,12 +193,12 @@
       <option value="">Todos los responsables</option>
     </select>
     <button class="btn secondary" id="refreshBtn" title="Refrescar">↻</button>
-    <button class="btn secondary" id="backupBtn" title="Descargar todo en JSON">⤓ Respaldo</button>
   </div>
 
   <div id="ejecPanel" style="display:none;"></div>
   <div id="list"></div>
   <div id="ganttView" style="display:none;"></div>
+  <div id="informeView" style="display:none;"></div>
   <div class="status-note" id="connStatus">Conectando con Firestore…</div>
 </div>
 
@@ -248,8 +271,12 @@
       </select>
     </div>
     <div class="field">
-      <label>Fecha límite</label>
+      <label>Fecha límite para aprobarla</label>
       <input type="date" id="f_fecha">
+    </div>
+    <div class="field">
+      <label>Fecha límite para ejecutarla (se puede dejar vacía)</label>
+      <input type="date" id="f_fechaEjec">
     </div>
     <div class="field">
       <label>Estado</label>
@@ -321,6 +348,14 @@
         <option>Gonzalo</option>
         <option>Ambos</option>
       </select>
+    </div>
+    <div class="field">
+      <label>Fecha límite para ejecutarla</label>
+      <input type="date" id="qa_fechaEjecucion">
+      <label class="check-line" style="margin-top:8px;">
+        <input type="checkbox" id="qa_sinFechaEjec">
+        <span>Todavía sin fecha definida</span>
+      </label>
     </div>
     <div class="field">
       <label>Responsable de aprobación — hoy es <b id="qa_asignadoActual"></b></label>
@@ -507,14 +542,33 @@ function hoyBA(){
   const d = ahoraBA();
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}-${String(d.getUTCDate()).padStart(2,"0")}`;
 }
+// Cada etapa se mide contra SU propia fecha. Antes habia una sola fecha limite y una
+// tarea recien aprobada aparecia vencida contra un plazo que ya habia cumplido.
+//   Pendiente / En revision -> fechaLimite    (plazo para APROBAR)
+//   Aprobada                -> fechaEjecucion (plazo para EJECUTAR; si no hay, no vence)
+//   Ejecutada               -> nunca vence
+function fechaQueRige(t){
+  if(!t) return "";
+  if(t.estado === "Ejecutada") return "";
+  if(t.estado === "Aprobada") return t.fechaEjecucion || "";
+  return t.fechaLimite || "";
+}
+function etiquetaPlazo(t){
+  if(!t) return "";
+  if(t.estado === "Aprobada") return "ejecutar antes del";
+  return "aprobar antes del";
+}
 function diasVencida(t){
-  if(!t.fechaLimite || t.estado === "Ejecutada") return 0;
+  const f = fechaQueRige(t);
+  if(!f) return 0;
   const hoy = hoyBA();
-  if(t.fechaLimite >= hoy) return 0;
-  const a = new Date(t.fechaLimite + "T12:00:00Z").getTime();
+  if(f >= hoy) return 0;
+  const a = new Date(f + "T12:00:00Z").getTime();
   const b = new Date(hoy + "T12:00:00Z").getTime();
   return Math.round((b - a) / 86400000);
 }
+// Para la Carta Gantt y los listados: si la etapa no tiene plazo propio, se cae al de aprobacion.
+function fechaGantt(t){ return fechaQueRige(t) || t.fechaEjecucion || t.fechaLimite || ""; }
 function showToast(msg){
   const t = $("toast");
   t.textContent = msg;
@@ -602,6 +656,257 @@ async function vaciarColaAlertas(){
   finally{ vaciandoCola = false; }
 }
 
+
+// ============================================================
+// INFORME DE DESEMPENO
+// ------------------------------------------------------------
+// Mide dos compromisos distintos por tarea, porque son de dos personas distintas:
+//   APROBACION -> la asume quien figura en "asignado", y su plazo es fechaLimite.
+//   EJECUCION  -> la asume "responsableEjecucion", y su plazo es fechaEjecucion.
+// Cada compromiso se ubica en el mes de SU plazo (o, si no tiene, del dia en que se hizo),
+// asi el informe del periodo filtrado habla de lo que vencia en ese periodo.
+// ============================================================
+let infAnio = "", infMes = "", infTipo = "";
+
+function diffDias(desde, hasta){
+  if(!desde || !hasta) return null;
+  return Math.round((new Date(hasta + "T12:00:00Z") - new Date(desde + "T12:00:00Z")) / 86400000);
+}
+function isoDeMs(ms){
+  if(!ms) return "";
+  const d = new Date(ms);
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,"0")}-${String(d.getUTCDate()).padStart(2,"0")}`;
+}
+function nombreMes(mm){ const m = MESES_EJEC.find(x=>x.v===mm); return m ? m.l : mm; }
+function etiquetaMes(ym){ return ym ? `${nombreMes(ym.slice(5,7))} ${ym.slice(0,4)}` : "sin fecha"; }
+
+// Devuelve un compromiso por cada etapa que tenga a alguien a cargo.
+function compromisosDe(t){
+  const hoy = hoyBA();
+  const out = [];
+  const armar = (clase, persona, plazo, hecho) => {
+    if(!persona) return;
+    const mes = (plazo || hecho || "").slice(0,7);
+    let situacion, dias = 0;
+    if(hecho && plazo)      { const d = diffDias(plazo, hecho); situacion = d <= 0 ? "aTiempo" : "tarde"; dias = Math.max(0, d); }
+    else if(hecho)          { situacion = "sinPlazo"; }
+    else if(plazo && plazo < hoy) { situacion = "abiertaVencida"; dias = diffDias(plazo, hoy); }
+    else if(plazo)          { situacion = "abiertaAlDia"; }
+    else                    { situacion = "abiertaSinPlazo"; }
+    out.push({clase, persona, plazo, hecho, mes, situacion, dias, tarea: t});
+  };
+  armar("aprobacion", t.asignado, t.fechaLimite || "", t.fechaAprobada || "");
+  armar("ejecucion", t.responsableEjecucion, t.fechaEjecucion || "", t.fechaEjecutada || "");
+  return out;
+}
+
+function compromisosDelPeriodo(){
+  let tareas = allTareas;
+  if(infTipo) tareas = tareas.filter(t => t.tipo === infTipo);
+  let todos = [];
+  tareas.forEach(t => { todos = todos.concat(compromisosDe(t)); });
+  return todos.filter(c => {
+    if(!c.mes) return false;
+    if(infAnio && c.mes.slice(0,4) !== infAnio) return false;
+    if(infMes && c.mes.slice(5,7) !== infMes) return false;
+    return true;
+  });
+}
+
+function resumirCompromisos(lista){
+  const r = {aTiempo:0, tarde:0, sinPlazo:0, abiertaVencida:0, abiertaAlDia:0, abiertaSinPlazo:0, diasTarde:[], diasAtrasoAbierta:[]};
+  lista.forEach(c => {
+    r[c.situacion] = (r[c.situacion] || 0) + 1;
+    if(c.situacion === "tarde") r.diasTarde.push(c.dias);
+    if(c.situacion === "abiertaVencida") r.diasAtrasoAbierta.push(c.dias);
+  });
+  r.cerradasConPlazo = r.aTiempo + r.tarde;
+  r.puntualidad = r.cerradasConPlazo ? Math.round(100 * r.aTiempo / r.cerradasConPlazo) : null;
+  r.promTarde = r.diasTarde.length ? (r.diasTarde.reduce((a,b)=>a+b,0) / r.diasTarde.length) : null;
+  r.peorAbierta = r.diasAtrasoAbierta.length ? Math.max.apply(null, r.diasAtrasoAbierta) : null;
+  r.total = lista.length;
+  return r;
+}
+
+function celdaPuntualidad(r){
+  if(r.puntualidad === null) return `<td class="neutra">—</td>`;
+  const cls = r.puntualidad >= 80 ? "buena" : (r.puntualidad >= 50 ? "" : "mala");
+  return `<td class="${cls}">${r.puntualidad}%</td>`;
+}
+function num(v, suf){ return v === null || v === undefined ? "—" : (Math.round(v*10)/10) + (suf || ""); }
+
+function tablaCumplimiento(comps, personas){
+  const fila = (nombre, lista) => {
+    const ap = resumirCompromisos(lista.filter(c => c.clase === "aprobacion"));
+    const ej = resumirCompromisos(lista.filter(c => c.clase === "ejecucion"));
+    return `<tr>
+      <td>${esc(nombre)}</td>
+      <td>${ap.aTiempo}</td><td>${ap.tarde}</td>${celdaPuntualidad(ap)}<td>${num(ap.promTarde)}</td><td class="${ap.abiertaVencida?"mala":""}">${ap.abiertaVencida}</td>
+      <td>${ej.aTiempo}</td><td>${ej.tarde}</td>${celdaPuntualidad(ej)}<td>${num(ej.promTarde)}</td><td class="${ej.abiertaVencida?"mala":""}">${ej.abiertaVencida}</td>
+    </tr>`;
+  };
+  const filas = personas.map(n => fila(n, comps.filter(c => c.persona === n))).join("");
+  return `<div class="inf-scroll"><table class="inf">
+    <thead>
+      <tr><th rowspan="2">Persona</th><th colspan="5">Aprobación</th><th colspan="5">Ejecución</th></tr>
+      <tr><th title="cerradas dentro del plazo">A tiempo</th><th title="cerradas fuera de plazo">Tarde</th><th title="porcentaje cerrado dentro del plazo">Puntual.</th><th title="dias promedio de atraso de las que se cerraron tarde">Atraso</th><th title="siguen abiertas y ya pasaron su plazo">Vencidas</th>
+          <th title="cerradas dentro del plazo">A tiempo</th><th title="cerradas fuera de plazo">Tarde</th><th title="porcentaje cerrado dentro del plazo">Puntual.</th><th title="dias promedio de atraso de las que se cerraron tarde">Atraso</th><th title="siguen abiertas y ya pasaron su plazo">Vencidas</th></tr>
+    </thead>
+    <tbody>${filas}</tbody>
+    <tfoot>${fila("Todos", comps).replace("<tr>", '<tr class="total">')}</tfoot>
+  </table></div>`;
+}
+
+function tablaVolumen(comps, personas){
+  const tipos = Array.from(new Set(comps.map(c => c.tarea.tipo || "Sin tipo"))).sort();
+  const cuenta = (n, tipo) => comps.filter(c => c.persona === n && (c.tarea.tipo || "Sin tipo") === tipo).length;
+  const filas = personas.map(n => {
+    const total = comps.filter(c => c.persona === n).length;
+    return `<tr><td>${esc(n)}</td>${tipos.map(tp => `<td>${cuenta(n, tp) || "—"}</td>`).join("")}<td>${total}</td></tr>`;
+  }).join("");
+  const totales = tipos.map(tp => comps.filter(c => (c.tarea.tipo || "Sin tipo") === tp).length);
+  return `<div class="inf-scroll"><table class="inf">
+    <thead><tr><th>Persona</th>${tipos.map(tp=>`<th>${esc(tp)}</th>`).join("")}<th>Total</th></tr></thead>
+    <tbody>${filas}</tbody>
+    <tfoot><tr class="total"><td>Todos</td>${totales.map(v=>`<td>${v}</td>`).join("")}<td>${comps.length}</td></tr></tfoot>
+  </table></div>`;
+}
+
+function tablaVelocidad(comps, personas){
+  const prom = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null;
+  const fila = (nombre, lista) => {
+    const aCreadaAprob = [], aAprobEjec = [];
+    lista.forEach(c => {
+      const t = c.tarea;
+      if(c.clase === "aprobacion" && t.fechaAprobada && t.createdAt){
+        const d = diffDias(isoDeMs(t.createdAt), t.fechaAprobada);
+        if(d !== null && d >= 0) aCreadaAprob.push(d);
+      }
+      if(c.clase === "ejecucion" && t.fechaEjecutada && t.fechaAprobada){
+        const d = diffDias(t.fechaAprobada, t.fechaEjecutada);
+        if(d !== null && d >= 0) aAprobEjec.push(d);
+      }
+    });
+    return `<tr><td>${esc(nombre)}</td><td>${num(prom(aCreadaAprob), " d")}</td><td>${aCreadaAprob.length}</td>
+      <td>${num(prom(aAprobEjec), " d")}</td><td>${aAprobEjec.length}</td></tr>`;
+  };
+  return `<div class="inf-scroll"><table class="inf">
+    <thead><tr><th>Persona</th><th>Creada → aprobada</th><th>casos</th><th>Aprobada → ejecutada</th><th>casos</th></tr></thead>
+    <tbody>${personas.map(n => fila(n, comps.filter(c=>c.persona===n))).join("")}</tbody>
+    <tfoot>${fila("Todos", comps).replace("<tr>", '<tr class="total">')}</tfoot>
+  </table></div>`;
+}
+
+function tablaMesAMes(comps, personas){
+  const meses = Array.from(new Set(comps.map(c => c.mes))).sort();
+  if(meses.length < 2) return "";
+  const celda = (lista) => {
+    const r = resumirCompromisos(lista);
+    if(!r.total) return `<td class="neutra">—</td>`;
+    const pct = r.puntualidad === null ? "s/plazo" : r.puntualidad + "%";
+    const cls = r.puntualidad === null ? "neutra" : (r.puntualidad >= 80 ? "buena" : (r.puntualidad >= 50 ? "" : "mala"));
+    const tit = `${r.aTiempo} a tiempo, ${r.tarde} tarde, ${r.abiertaVencida} vencida(s) sin cerrar`;
+    return `<td class="${cls}" title="${escAttr(tit)}">${pct} <span class="neutra">(${r.total})</span></td>`;
+  };
+  const filas = meses.map(m => {
+    const delMes = comps.filter(c => c.mes === m);
+    const celdasPersona = personas.map(n => celda(delMes.filter(c => c.persona === n))).join("");
+    return `<tr><td>${esc(etiquetaMes(m))}</td>${celdasPersona}${celda(delMes)}</tr>`;
+  }).join("");
+  return `<div class="inf-scroll"><table class="inf">
+    <thead><tr><th>Mes</th>${personas.map(n=>`<th>${esc(n)}</th>`).join("")}<th>Todos</th></tr></thead>
+    <tbody>${filas}</tbody>
+  </table></div>`;
+}
+
+function tablaAbiertoHoy(personas){
+  const fila = (nombre) => {
+    const comps = [];
+    allTareas.forEach(t => compromisosDe(t).forEach(c => { if(c.persona === nombre) comps.push(c); }));
+    const abiertas = comps.filter(c => !c.hecho && c.tarea.estado !== "Ejecutada");
+    const venc = abiertas.filter(c => c.situacion === "abiertaVencida");
+    const peor = venc.length ? Math.max.apply(null, venc.map(c=>c.dias)) : null;
+    return `<tr><td>${esc(nombre)}</td><td>${abiertas.length}</td><td class="${venc.length?"mala":""}">${venc.length}</td><td>${peor===null?"—":peor+" d"}</td></tr>`;
+  };
+  return `<div class="inf-scroll"><table class="inf">
+    <thead><tr><th>Persona</th><th>Abiertas</th><th>Vencidas</th><th>Peor atraso</th></tr></thead>
+    <tbody>${personas.map(fila).join("")}</tbody>
+  </table></div>`;
+}
+
+function informeCSV(comps){
+  const filas = [["clase","persona","tarea","tipo","mes","plazo","hecho","situacion","dias"]];
+  comps.forEach(c => filas.push([c.clase, c.persona, (c.tarea.titulo||"").replace(/;/g,","), c.tarea.tipo||"", c.mes, c.plazo, c.hecho, c.situacion, c.dias]));
+  return filas.map(f => f.join(";")).join("\n");
+}
+
+function renderInforme(){
+  const wrap = $("informeView");
+  const comps = compromisosDelPeriodo();
+  const personas = Array.from(new Set(comps.map(c => c.persona).filter(Boolean))).sort();
+  const anios = Array.from(new Set(allTareas.flatMap(t => compromisosDe(t).map(c => c.mes.slice(0,4))).filter(Boolean))).sort().reverse();
+  const tipos = Array.from(new Set(allTareas.map(t => t.tipo).filter(Boolean))).sort();
+  const periodoTxt = infMes ? `${nombreMes(infMes)}${infAnio ? " de " + infAnio : ""}` : (infAnio ? `todo ${infAnio}` : "todo el historial");
+
+  const filtros = `
+    <div class="inf-filtros">
+      <select id="infAnio"><option value="">Todos los años</option>${anios.map(a=>`<option value="${a}"${a===infAnio?" selected":""}>${a}</option>`).join("")}</select>
+      <select id="infMes"><option value="">Todos los meses</option>${MESES_EJEC.map(m=>`<option value="${m.v}"${m.v===infMes?" selected":""}>${m.l}</option>`).join("")}</select>
+      <select id="infTipo"><option value="">Todos los tipos</option>${tipos.map(tp=>`<option value="${escAttr(tp)}"${tp===infTipo?" selected":""}>${esc(tp)}</option>`).join("")}</select>
+      <button class="btn small secondary" id="infCSV">⤓ Bajar el informe</button>
+    </div>`;
+
+  if(!comps.length){
+    wrap.innerHTML = filtros + `<div class="empty">No hay compromisos de diseño en ${esc(periodoTxt)}.</div>`;
+    engancharInforme();
+    return;
+  }
+
+  wrap.innerHTML = filtros + `
+    <div class="inf-bloque">
+      <h4>Cumplimiento de plazos — ${esc(periodoTxt)}</h4>
+      <p class="ayuda">Cada tarea genera dos compromisos con dueños distintos: <b>aprobar</b> (de quien figura como responsable de aprobación, contra la fecha límite de aprobación) y <b>ejecutar</b> (de quien ejecuta, contra la fecha límite de ejecución). Cada compromiso cuenta en el mes de su plazo. "Puntual." es el porcentaje que se cerró dentro del plazo; "atraso prom." son los días promedio de las que se cerraron tarde.</p>
+      ${tablaCumplimiento(comps, personas)}
+    </div>
+    <div class="inf-bloque">
+      <h4>Mes a mes</h4>
+      <p class="ayuda">Puntualidad de cada persona por mes, con la cantidad de compromisos entre paréntesis. Sirve para ver si mejora o empeora con el tiempo. Aparece cuando el período abarca más de un mes.</p>
+      ${tablaMesAMes(comps, personas) || `<p class="ayuda">Elegí un período de más de un mes para ver la evolución.</p>`}
+    </div>
+    <div class="inf-bloque">
+      <h4>Volumen de trabajo</h4>
+      <p class="ayuda">Cuántos compromisos tuvo cada uno en el período, abiertos por tipo de pieza. Sirve para ver si la carga está repartida.</p>
+      ${tablaVolumen(comps, personas)}
+    </div>
+    <div class="inf-bloque">
+      <h4>Velocidad</h4>
+      <p class="ayuda">Días promedio que tarda cada etapa. "Creada → aprobada" mide cuánto se demora en aprobarse una tarea desde que se cargó; "aprobada → ejecutada", cuánto pasa desde la aprobación hasta que se ejecuta. "Casos" es sobre cuántas tareas se calculó el promedio.</p>
+      ${tablaVelocidad(comps, personas)}
+    </div>
+    <div class="inf-bloque">
+      <h4>Lo que sigue abierto hoy</h4>
+      <p class="ayuda">Foto del momento, sin filtrar por período: qué tiene cada uno sin cerrar y cuánto es el peor atraso.</p>
+      ${tablaAbiertoHoy(Array.from(new Set(allTareas.flatMap(t => [t.asignado, t.responsableEjecucion]).filter(Boolean))).sort())}
+    </div>`;
+  engancharInforme();
+}
+
+function engancharInforme(){
+  const a = $("infAnio"), m = $("infMes"), tp = $("infTipo"), csv = $("infCSV");
+  if(a) a.addEventListener("change", e => { infAnio = e.target.value; renderInforme(); });
+  if(m) m.addEventListener("change", e => { infMes = e.target.value; renderInforme(); });
+  if(tp) tp.addEventListener("change", e => { infTipo = e.target.value; renderInforme(); });
+  if(csv) csv.addEventListener("click", () => {
+    const blob = new Blob(["﻿" + informeCSV(compromisosDelPeriodo())], {type: "text/csv;charset=utf-8"});
+    const el = document.createElement("a");
+    el.href = URL.createObjectURL(blob);
+    el.download = `babel-diseno-informe-${infAnio || "todo"}${infMes ? "-" + infMes : ""}.csv`;
+    document.body.appendChild(el); el.click();
+    setTimeout(()=>{ URL.revokeObjectURL(el.href); el.remove(); }, 1000);
+    showToast("Informe descargado");
+  });
+}
+
 // ============================================================
 // LOAD / POLL
 // ============================================================
@@ -610,7 +915,9 @@ async function loadData(){
     allTareas = await fsList();
     const vencidas = allTareas.filter(t => diasVencida(t) > 0).length;
     $("connStatus").textContent = `Sincronizado · ${allTareas.length} tarea(s)` + (vencidas ? ` · ${vencidas} vencida(s)` : "");
-    if(currentTab === "gantt") renderGantt(); else render();
+    if(currentTab === "gantt") renderGantt();
+    else if(currentTab === "informe") renderInforme();
+    else render();
     checkVencidas();
     vaciarColaAlertas();
   }catch(e){
@@ -623,10 +930,10 @@ async function loadData(){
 // Si el momento cae fuera de la franja horaria, sendWA la deja en cola hasta las 9:00.
 async function checkVencidas(){
   const hoy = hoyBA();
-  const vencidas = allTareas.filter(t => t.fechaLimite && t.fechaLimite < hoy && t.estado !== "Ejecutada" && !t.vencidaNotificada);
+  const vencidas = allTareas.filter(t => diasVencida(t) > 0 && !t.vencidaNotificada);
   for(const t of vencidas){
     try{
-      await sendWA(`⏰ Babel Diseño: "${t.titulo}" venció el ${fmtFecha(t.fechaLimite)} y sigue en *${t.estado}*.`);
+      await sendWA(`⏰ Babel Diseño: "${t.titulo}" venció el ${fmtFecha(fechaQueRige(t))} (${etiquetaPlazo(t)}) y sigue en *${t.estado}*.`);
       await fsUpdate(t.id, {...stripId(t), vencidaNotificada: true});
     }catch(e){ console.warn("No se pudo notificar vencimiento", e); }
   }
@@ -889,6 +1196,33 @@ function renderHistorial(t){
   return `<details class="historial"><summary>Historial de responsables (${h.length})</summary><ul><li>${items.join("</li><li>")}</li></ul></details>`;
 }
 
+
+// Circulos con la cantidad de tareas en cada pestaña. Respetan los filtros
+// activos (busqueda, tipo y responsable) pero no la pestaña, asi que sirven
+// para ver de un vistazo donde esta cada cosa. Si alguna esta vencida, el
+// circulo se pone rojo.
+function pintarContadores(){
+  const q = ($("search").value || "").toLowerCase().trim();
+  const tipoF = $("filterTipo").value;
+  const base = allTareas.filter(t => {
+    if(tipoF && t.tipo !== tipoF) return false;
+    if(filtroAsignado && t.asignado !== filtroAsignado) return false;
+    if(q && !(`${t.titulo||""} ${t.descripcion||""}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const pestanas = ["Pendiente", "En revisión", "Aprobada", "Ejecutada", "todas"];
+  pestanas.forEach(p => {
+    const el = document.getElementById("num-" + p.replace(/ /g, "-"));
+    if(!el) return;
+    const arr = (p === "todas") ? base : base.filter(t => t.estado === p);
+    const vencidas = arr.filter(t => diasVencida(t) > 0).length;
+    el.textContent = arr.length;
+    el.classList.toggle("hay-vencidas", vencidas > 0);
+    el.classList.toggle("cero", arr.length === 0);
+    el.title = vencidas ? `${arr.length} tarea(s), ${vencidas} vencida(s)` : `${arr.length} tarea(s)`;
+  });
+}
+
 function render(){
   const q = ($("search").value || "").toLowerCase().trim();
   const tipoF = $("filterTipo").value;
@@ -896,6 +1230,7 @@ function render(){
   const ejecIds = renderEjecPanel();
   const numeros = computeTareaNumeros();
   pintarFiltroAsignado();
+  pintarContadores();
 
   let items = allTareas.filter(t=>{
     if(!matchesTab(t)) return false;
@@ -928,10 +1263,13 @@ function render(){
     const badgePrio = `<span class="badge prio-${t.prioridad}">${esc((t.prioridad||"").toUpperCase())}</span>`;
     const badgeVencida = atraso > 0
       ? `<span class="badge vencida">VENCIDA · ${atraso} DÍA${atraso===1?"":"S"}</span>` : "";
-    const fecha = t.fechaLimite ? `${atraso>0 ? "⚠️" : "📅"} ${fmtFecha(t.fechaLimite)}` : "";
+    const fRige = fechaQueRige(t);
+    const fecha = fRige ? `${atraso>0 ? "⚠️" : "📅"} ${etiquetaPlazo(t)} ${fmtFecha(fRige)}`
+                : (t.estado === "Aprobada" ? `📅 sin fecha de ejecución` : "");
     const detalle = (t.estado === "Aprobada" && t.detallePendiente) ? `<div class="detalle">Falta: ${esc(t.detallePendiente)}</div>` : "";
     const metodoTxt = t.metodoEjecucion ? (t.metodoEjecucion === "Otro" && t.metodoEjecucionOtro ? `Otro — ${t.metodoEjecucionOtro}` : t.metodoEjecucion) : "";
     const lineasFecha = [];
+    if(t.fechaLimite && t.estado === "Aprobada") lineasFecha.push(`Plazo de aprobación: ${fmtFecha(t.fechaLimite)}`);
     if(t.fechaAprobada) lineasFecha.push(`Aprobada: ${fmtFecha(t.fechaAprobada)}`);
     if(t.fechaEjecutada) lineasFecha.push(`Ejecutada: ${fmtFecha(t.fechaEjecutada)}`);
     if(metodoTxt && (t.estado === "Aprobada" || t.estado === "Ejecutada")) lineasFecha.push(`Método: ${esc(metodoTxt)}`);
@@ -962,11 +1300,13 @@ function render(){
 const GANTT_COLOR = {"Pendiente":"var(--muted)","En revisión":"var(--rev)","Aprobada":"var(--apr)","Ejecutada":"var(--eje)"};
 
 function renderGantt(){
+  pintarFiltroAsignado();
+  pintarContadores();
   const wrap = $("ganttView");
   const items = allTareas
-    .filter(t => t.fechaLimite)
+    .filter(t => fechaGantt(t))
     .slice()
-    .sort((a,b) => (a.fechaLimite < b.fechaLimite ? -1 : a.fechaLimite > b.fechaLimite ? 1 : 0));
+    .sort((a,b) => (fechaGantt(a) < fechaGantt(b) ? -1 : fechaGantt(a) > fechaGantt(b) ? 1 : 0));
 
   if(items.length === 0){
     wrap.innerHTML = `<div class="empty">No hay tareas con fecha límite para graficar.</div>`;
@@ -975,7 +1315,7 @@ function renderGantt(){
 
   const todayMs = Date.now();
   const starts = items.map(t => t.createdAt || todayMs);
-  const ends = items.map(t => new Date(t.fechaLimite + "T12:00:00").getTime());
+  const ends = items.map(t => new Date(fechaGantt(t) + "T12:00:00").getTime());
 
   let minMs = Math.min(...starts, todayMs);
   let maxMs = Math.max(...ends, todayMs);
@@ -994,7 +1334,7 @@ function renderGantt(){
 
   const rows = items.map(t => {
     const s = t.createdAt || todayMs;
-    const e = new Date(t.fechaLimite + "T12:00:00").getTime();
+    const e = new Date(fechaGantt(t) + "T12:00:00").getTime();
     const left = pct(Math.min(s,e));
     const width = Math.max(pct(Math.max(s,e)) - left, 1.5);
     const atraso = diasVencida(t);
@@ -1003,7 +1343,7 @@ function renderGantt(){
       <div class="gantt-row">
         <div class="gantt-label" title="${escAttr(t.titulo||"")}">${esc(t.titulo || "(sin título)")}</div>
         <div class="gantt-track">
-          <div class="gantt-bar" style="left:${left}%;width:${width}%;background:${color};" title="${escAttr((t.estado||"")+" · vence "+fmtFecha(t.fechaLimite))}">${esc(fmtFecha(t.fechaLimite))}</div>
+          <div class="gantt-bar" style="left:${left}%;width:${width}%;background:${color};" title="${escAttr((t.estado||"")+" · "+etiquetaPlazo(t)+" "+fmtFecha(fechaGantt(t)))}">${esc(fmtFecha(fechaGantt(t)))}</div>
         </div>
       </div>`;
   }).join("");
@@ -1074,6 +1414,10 @@ function openQuickApprove(id){
   reasigSel.value = t.asignado || PERSONAS[0];
   $("qa_asignadoActual").textContent = t.asignado || "sin asignar";
 
+  $("qa_fechaEjecucion").value = t.fechaEjecucion || "";
+  $("qa_sinFechaEjec").checked = !t.fechaEjecucion;
+  $("qa_fechaEjecucion").disabled = $("qa_sinFechaEjec").checked;
+
   $("qa_drivePaso").style.display = DRIVE_HOOK.enabled ? "block" : "none";
   $("qa_crearCarpeta").checked = false;
 
@@ -1083,6 +1427,14 @@ window.openQuickApprove = openQuickApprove;
 
 $("qa_metodo").addEventListener("change", ()=>{
   $("qa_metodoOtroWrap").style.display = ($("qa_metodo").value === "Otro") ? "block" : "none";
+});
+$("qa_sinFechaEjec").addEventListener("change", ()=>{
+  const sin = $("qa_sinFechaEjec").checked;
+  $("qa_fechaEjecucion").disabled = sin;
+  if(sin) $("qa_fechaEjecucion").value = "";
+});
+$("qa_fechaEjecucion").addEventListener("input", ()=>{
+  if($("qa_fechaEjecucion").value) $("qa_sinFechaEjec").checked = false;
 });
 $("qa_cancelBtn").addEventListener("click", ()=> $("quickApproveBg").classList.remove("open"));
 $("quickApproveBg").addEventListener("click", (e)=>{ if(e.target.id==="quickApproveBg") $("quickApproveBg").classList.remove("open"); });
@@ -1108,6 +1460,12 @@ $("qa_confirmBtn").addEventListener("click", async ()=>{
   const nuevoAsignado = $("qa_asignado").value;
   if(!metodoEjecucion){ showToast("Elegí el método de ejecución"); return; }
   if(!responsableEjecucion){ showToast("Elegí el responsable de ejecución"); return; }
+  const sinFechaEjec = $("qa_sinFechaEjec").checked;
+  const fechaEjecucion = sinFechaEjec ? "" : $("qa_fechaEjecucion").value;
+  if(!sinFechaEjec && !fechaEjecucion){
+    showToast("Poné la fecha de ejecución o marcá 'todavía sin fecha definida'");
+    return;
+  }
   const metodoEjecucionOtro = (metodoEjecucion === "Otro") ? $("qa_metodoOtro").value.trim() : "";
   const fechaAprobada = t.fechaAprobada || todayISO();
 
@@ -1125,6 +1483,8 @@ $("qa_confirmBtn").addEventListener("click", async ()=>{
   await fsUpdate(quickApproveId, {
     ...stripId(t),
     estado: "Aprobada",
+    fechaEjecucion,
+    vencidaNotificada: false,
     metodoEjecucion,
     metodoEjecucionOtro,
     responsableEjecucion,
@@ -1136,7 +1496,8 @@ $("qa_confirmBtn").addEventListener("click", async ()=>{
   });
   showToast(`"${t.titulo}" → Aprobada`);
   const reasig = (nuevoAsignado && nuevoAsignado !== t.asignado) ? `, reasignada a ${nuevoAsignado}` : "";
-  sendWA(`📐 Babel Diseño: "${t.titulo}" pasó a *Aprobada* (método: ${metodoEjecucion === "Otro" && metodoEjecucionOtro ? metodoEjecucionOtro : metodoEjecucion}, ejecuta: ${responsableEjecucion}${reasig}).`);
+  const plazoTxt = fechaEjecucion ? `, ejecutar antes del ${fmtFecha(fechaEjecucion)}` : ", sin fecha de ejecución definida";
+  sendWA(`📐 Babel Diseño: "${t.titulo}" pasó a *Aprobada* (método: ${metodoEjecucion === "Otro" && metodoEjecucionOtro ? metodoEjecucionOtro : metodoEjecucion}, ejecuta: ${responsableEjecucion}${plazoTxt}${reasig}).`);
   $("quickApproveBg").classList.remove("open");
   loadData();
 });
@@ -1149,18 +1510,15 @@ document.querySelectorAll(".tab").forEach(tab=>{
     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
     tab.classList.add("active");
     currentTab = tab.dataset.f;
-    if(currentTab === "gantt"){
-      $("toolbarNormal").style.display = "none";
-      $("list").style.display = "none";
-      $("ejecPanel").style.display = "none";
-      $("ganttView").style.display = "block";
-      renderGantt();
-    } else {
-      $("toolbarNormal").style.display = "flex";
-      $("list").style.display = "block";
-      $("ganttView").style.display = "none";
-      render();
-    }
+    const especial = (currentTab === "gantt" || currentTab === "informe");
+    $("toolbarNormal").style.display = especial ? "none" : "flex";
+    $("list").style.display = especial ? "none" : "block";
+    if(especial) $("ejecPanel").style.display = "none";
+    $("ganttView").style.display = (currentTab === "gantt") ? "block" : "none";
+    $("informeView").style.display = (currentTab === "informe") ? "block" : "none";
+    if(currentTab === "gantt") renderGantt();
+    else if(currentTab === "informe") renderInforme();
+    else render();
   });
 });
 $("search").addEventListener("input", render);
@@ -1168,24 +1526,8 @@ $("filterTipo").addEventListener("change", render);
 $("filterAsignado").addEventListener("change", (e)=>{ filtroAsignado = e.target.value; render(); });
 $("refreshBtn").addEventListener("click", loadData);
 
-// Exportar respaldo: se baja todo lo que hay en Firestore tal cual, sin filtrar.
-$("backupBtn").addEventListener("click", ()=>{
-  const payload = {
-    exportadoEl: new Date().toISOString(),
-    proyecto: PROJECT_ID,
-    coleccion: COLLECTION,
-    cantidad: allTareas.length,
-    tareas: allTareas
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {type: "application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `babel-diseno-respaldo-${hoyBA()}.json`;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  showToast(`Respaldo de ${allTareas.length} tarea(s) descargado`);
-});
+// El respaldo .json ya no se baja a mano: lo genera Apps Script y lo deja en el Drive
+// cada 15 dias. Ver "Babel - Paneles web - donde vive cada cosa".
 
 // ============================================================
 // LIGHTBOX
@@ -1277,6 +1619,7 @@ function resetForm(){
   $("f_responsableEjecucion").value = "";
   $("f_prioridad").value = "Media";
   $("f_fecha").value = "";
+  $("f_fechaEjec").value = "";
   $("f_estado").value = "Pendiente";
   $("f_metodo").value = "";
   $("f_metodoOtro").value = "";
@@ -1315,6 +1658,7 @@ function openEdit(id, forceEstado){
   $("f_responsableEjecucion").value = t.responsableEjecucion || "";
   $("f_prioridad").value = t.prioridad || "Media";
   $("f_fecha").value = t.fechaLimite || "";
+  $("f_fechaEjec").value = t.fechaEjecucion || "";
   $("f_estado").value = forceEstado || t.estado || "Pendiente";
   $("f_metodo").value = t.metodoEjecucion || "";
   $("f_metodoOtro").value = t.metodoEjecucionOtro || "";
@@ -1374,6 +1718,7 @@ $("saveBtn").addEventListener("click", async ()=>{
     responsableEjecucion,
     prioridad: $("f_prioridad").value,
     fechaLimite: $("f_fecha").value,
+    fechaEjecucion: $("f_fechaEjec").value,
     estado,
     metodoEjecucion,
     metodoEjecucionOtro: (metodoEjecucion === "Otro") ? $("f_metodoOtro").value.trim() : "",
