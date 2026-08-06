@@ -154,6 +154,46 @@
   .tab-num.hay-vencidas{background:var(--danger);color:#fff;}
   .tab.active .tab-num.hay-vencidas{background:#8f3a32;color:#fff;}
   .tab-num.cero{opacity:.45;}
+
+  /* ===== CALENDARIO ===== */
+  .cal-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 14px;}
+  .cal-nav{display:flex;align-items:center;gap:6px;}
+  .cal-mes{font-family:'Quattrocento',Georgia,serif;font-size:1.15rem;font-weight:700;
+    color:var(--gold);min-width:190px;text-transform:capitalize;}
+  .cal-capas{display:flex;gap:14px;margin-left:auto;flex-wrap:wrap;}
+  .cal-capa{display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;
+    font-size:.8rem;color:var(--muted);}
+  .cal-capa input{accent-color:var(--gold);width:15px;height:15px;cursor:pointer;}
+  .cal-capa .pt{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  .cal-capa.off{opacity:.42;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:#22304d;
+    border:1px solid #22304d;border-radius:12px;overflow:hidden;}
+  .cal-dow{background:var(--navy);padding:8px 6px;text-align:center;font-size:.66rem;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);}
+  .cal-dia{background:var(--card);min-height:104px;padding:5px 5px 7px;display:flex;
+    flex-direction:column;gap:3px;min-width:0;overflow:hidden;}
+  .cal-dia.fuera{background:#111a2b;}
+  .cal-dia.fuera .cal-num{opacity:.3;}
+  .cal-dia.hoy{box-shadow:inset 0 0 0 2px var(--gold);}
+  .cal-num{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.7rem;color:var(--muted);
+    text-align:right;padding:1px 2px;}
+  .cal-dia.hoy .cal-num{color:var(--gold);font-weight:700;}
+  .cal-chip{font-size:.665rem;line-height:1.25;padding:3px 6px;border-radius:5px;cursor:pointer;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid transparent;
+    background:#1d2a44;color:var(--txt);transition:filter .12s;}
+  .cal-chip:hover{filter:brightness(1.35);}
+  .cal-chip b{font-weight:700;}
+  .cal-chip.diseno{border-left-color:#d0aa5e;background:rgba(208,170,94,.15);}
+  .cal-chip.marketing{border-left-color:#00908a;background:rgba(0,144,138,.17);}
+  .cal-chip.activacion{border-left-color:#4fae6a;background:rgba(79,174,106,.16);}
+  .cal-chip.venc{border-left-color:var(--danger);background:rgba(192,85,74,.2);}
+  .cal-vacio{padding:26px;text-align:center;color:var(--muted);font-size:.86rem;}
+  .cal-pie{margin-top:12px;font-size:.72rem;color:var(--muted);line-height:1.8;}
+  @media(max-width:700px){
+    .cal-dia{min-height:76px;}
+    .cal-chip{font-size:.6rem;}
+    .cal-capas{margin-left:0;width:100%;}
+  }
 </style>
 </head>
 <body>
@@ -170,7 +210,7 @@
     <div class="tab" data-f="Aprobada">Aprobada<span class="tab-num" id="num-Aprobada">0</span></div>
     <div class="tab" data-f="Ejecutada">Ejecutada<span class="tab-num" id="num-Ejecutada">0</span></div>
     <div class="tab" data-f="todas">Todas<span class="tab-num" id="num-todas">0</span></div>
-    <div class="tab" data-f="gantt">📊 Carta Gantt</div>
+    <div class="tab" data-f="calendario">📅 Calendario</div>
     <div class="tab" data-f="informe">📈 Informe</div>
   </div>
 
@@ -198,6 +238,7 @@
   <div id="ejecPanel" style="display:none;"></div>
   <div id="list"></div>
   <div id="ganttView" style="display:none;"></div>
+  <div id="calView" style="display:none;"></div>
   <div id="informeView" style="display:none;"></div>
   <div class="status-note" id="connStatus">Conectando con Firestore…</div>
 </div>
@@ -269,6 +310,11 @@
         <option selected>Media</option>
         <option>Baja</option>
       </select>
+    </div>
+    <div class="field">
+      <label>Fecha del evento o de la activación</label>
+      <input type="date" id="f_fechaEvento">
+      <div class="hint" id="hintFechas">Al cargarla se completan solas las fechas de abajo: aprobar = evento − 16 días · publicar = evento − 13 días. Podés editarlas después.</div>
     </div>
     <div class="field">
       <label>Fecha límite para aprobarla</label>
@@ -923,6 +969,7 @@ async function loadData(){
     $("connStatus").textContent = `Sincronizado · ${allTareas.length} tarea(s)` + (vencidas ? ` · ${vencidas} vencida(s)` : "");
     if(currentTab === "gantt") renderGantt();
     else if(currentTab === "informe") renderInforme();
+    else if(currentTab === "calendario") renderCalendario();
     else render();
     checkVencidas();
     vaciarColaAlertas();
@@ -1536,14 +1583,16 @@ document.querySelectorAll(".tab").forEach(tab=>{
     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
     tab.classList.add("active");
     currentTab = tab.dataset.f;
-    const especial = (currentTab === "gantt" || currentTab === "informe");
+    const especial = (currentTab === "gantt" || currentTab === "informe" || currentTab === "calendario");
     $("toolbarNormal").style.display = especial ? "none" : "flex";
     $("list").style.display = especial ? "none" : "block";
     if(especial) $("ejecPanel").style.display = "none";
     $("ganttView").style.display = (currentTab === "gantt") ? "block" : "none";
     $("informeView").style.display = (currentTab === "informe") ? "block" : "none";
+    $("calView").style.display = (currentTab === "calendario") ? "block" : "none";
     if(currentTab === "gantt") renderGantt();
     else if(currentTab === "informe") renderInforme();
+    else if(currentTab === "calendario") renderCalendario();
     else render();
   });
 });
@@ -1644,6 +1693,7 @@ function resetForm(){
   $("f_asignado").value = "Rolando";
   $("f_responsableEjecucion").value = "";
   $("f_prioridad").value = "Media";
+  $("f_fechaEvento").value = "";
   $("f_fecha").value = "";
   $("f_fechaEjec").value = "";
   $("f_estado").value = "Pendiente";
@@ -1683,6 +1733,7 @@ function openEdit(id, forceEstado){
   $("f_asignado").value = t.asignado || "Rolando";
   $("f_responsableEjecucion").value = t.responsableEjecucion || "";
   $("f_prioridad").value = t.prioridad || "Media";
+  $("f_fechaEvento").value = t.fechaEvento || "";
   $("f_fecha").value = t.fechaLimite || "";
   $("f_fechaEjec").value = t.fechaEjecucion || "";
   $("f_estado").value = forceEstado || t.estado || "Pendiente";
@@ -1743,6 +1794,7 @@ $("saveBtn").addEventListener("click", async ()=>{
     historialAsignados: historial,
     responsableEjecucion,
     prioridad: $("f_prioridad").value,
+    fechaEvento: $("f_fechaEvento").value,
     fechaLimite: $("f_fecha").value,
     fechaEjecucion: $("f_fechaEjec").value,
     estado,
@@ -1790,6 +1842,164 @@ $("deleteBtn").addEventListener("click", async ()=>{
 // INIT
 // ============================================================
 startPolling();
+
+// ============================================================
+// CALENDARIO  (reemplaza a la Carta Gantt)
+// Reglas de fecha, contadas desde la fecha del evento:
+//   producto en revision = -19 | diseno listo = -16 | publicacion = -13 | recordatorio = -2
+// ============================================================
+const CAL_REGLAS = [
+  { dias:-19, capa:'diseno',     etiqueta:'Producto en revisión' },
+  { dias:-16, capa:'diseno',     etiqueta:'Diseño listo' },
+  { dias:-13, capa:'marketing',  etiqueta:'Publicar el post' },
+  { dias:-2,  capa:'marketing',  etiqueta:'Recordatorio' },
+  { dias:0,   capa:'activacion', etiqueta:'' }
+];
+const CAL_DOW = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+const CAL_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+let calMes = null;                       // {y, m}  m = 0-11
+let calCapas = { diseno:true, marketing:true, activacion:true };
+
+function calSumaDias(iso, n){
+  if(!iso) return "";
+  const p = iso.split('-').map(Number);
+  const d = new Date(Date.UTC(p[0], p[1]-1, p[2]));
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0,10);
+}
+function calMesActual(){
+  if (calMes) return calMes;
+  const h = hoyBA().split('-').map(Number);
+  calMes = { y:h[0], m:h[1]-1 };
+  return calMes;
+}
+function calMover(n){
+  const c = calMesActual();
+  const d = new Date(Date.UTC(c.y, c.m + n, 1));
+  calMes = { y:d.getUTCFullYear(), m:d.getUTCMonth() };
+  renderCalendario();
+}
+function calHoy(){ calMes = null; renderCalendario(); }
+function calToggle(capa){
+  calCapas[capa] = !calCapas[capa];
+  renderCalendario();
+}
+
+// Arma el indice { 'YYYY-MM-DD': [chip, ...] } a partir de las tareas.
+function calEventos(){
+  const idx = {};
+  const push = (iso, chip) => { if(!iso) return; (idx[iso] = idx[iso] || []).push(chip); };
+
+  allTareas.forEach(t => {
+    if (t.fechaEvento) {
+      CAL_REGLAS.forEach(r => {
+        const iso = calSumaDias(t.fechaEvento, r.dias);
+        push(iso, {
+          capa: r.capa,
+          texto: r.etiqueta ? r.etiqueta + ': ' + (t.titulo||'') : (t.titulo||''),
+          titulo: t.titulo || '',
+          id: t.id,
+          estado: t.estado
+        });
+      });
+    } else {
+      // Tareas viejas, sin fecha de evento: se muestran igual en su fecha vigente.
+      const iso = fechaQueRige(t);
+      if (iso) push(iso, {
+        capa: 'diseno',
+        texto: (t.estado === 'Aprobada' ? 'Ejecutar: ' : 'Aprobar: ') + (t.titulo||''),
+        titulo: t.titulo || '',
+        id: t.id,
+        estado: t.estado,
+        vencida: diasVencida(t) > 0
+      });
+    }
+  });
+  return idx;
+}
+
+function renderCalendario(){
+  const c = calMesActual();
+  const idx = calEventos();
+  const hoy = hoyBA();
+
+  const primero = new Date(Date.UTC(c.y, c.m, 1));
+  const diasMes = new Date(Date.UTC(c.y, c.m + 1, 0)).getUTCDate();
+  let offset = primero.getUTCDay() - 1; if (offset < 0) offset = 6;   // lunes primero
+  const inicio = new Date(Date.UTC(c.y, c.m, 1 - offset));
+
+  const capa = (k, color, label) => `
+    <label class="cal-capa ${calCapas[k] ? '' : 'off'}">
+      <input type="checkbox" data-capa="${k}" ${calCapas[k] ? 'checked' : ''}>
+      <span class="pt" style="background:${color}"></span>${label}
+    </label>`;
+
+  let html = `
+    <div class="cal-top">
+      <div class="cal-nav">
+        <button class="btn small secondary" id="calPrev">‹</button>
+        <button class="btn small secondary" id="calHoy">Hoy</button>
+        <button class="btn small secondary" id="calNext">›</button>
+      </div>
+      <div class="cal-mes">${CAL_MESES[c.m]} ${c.y}</div>
+      <div class="cal-capas">
+        ${capa('diseno','#d0aa5e','Diseño')}
+        ${capa('marketing','#00908a','Marketing')}
+        ${capa('activacion','#4fae6a','Activaciones')}
+      </div>
+    </div>
+    <div class="cal-grid">
+      ${CAL_DOW.map(d => `<div class="cal-dow">${d}</div>`).join('')}`;
+
+  let total = 0;
+  for (let i = 0; i < 42; i++){
+    const d = new Date(inicio.getTime());
+    d.setUTCDate(d.getUTCDate() + i);
+    const iso = d.toISOString().slice(0,10);
+    const fuera = d.getUTCMonth() !== c.m;
+    const chips = (idx[iso] || []).filter(x => calCapas[x.capa]);
+    total += fuera ? 0 : chips.length;
+    html += `<div class="cal-dia ${fuera ? 'fuera' : ''} ${iso === hoy ? 'hoy' : ''}">
+      <div class="cal-num">${d.getUTCDate()}</div>
+      ${chips.map(x => `<div class="cal-chip ${x.capa} ${x.vencida ? 'venc' : ''}" data-id="${escAttr(x.id)}" title="${escAttr(x.texto)}">${esc(x.texto)}</div>`).join('')}
+    </div>`;
+  }
+  html += `</div>`;
+
+  if (!total) html += `<div class="cal-vacio">No hay nada agendado en ${CAL_MESES[c.m]}. Cargá la <b>fecha del evento</b> en una tarea y aparecen sus cuatro hitos.</div>`;
+
+  html += `<div class="cal-pie">
+    Producto en revisión = evento − 19 días · Diseño listo = evento − 16 · Publicar = evento − 13 · Recordatorio = evento − 2.<br>
+    Las tareas sin fecha de evento se muestran en su fecha vigente, en la capa Diseño.
+  </div>`;
+
+  const cont = $("calView");
+  cont.innerHTML = html;
+  $("calPrev").onclick = () => calMover(-1);
+  $("calNext").onclick = () => calMover(1);
+  $("calHoy").onclick  = calHoy;
+  cont.querySelectorAll('.cal-capa input').forEach(chk => {
+    chk.onchange = () => calToggle(chk.dataset.capa);
+  });
+  cont.querySelectorAll('.cal-chip').forEach(ch => {
+    ch.onclick = () => {
+      if (ch.dataset.id && typeof openEdit === 'function') openEdit(ch.dataset.id);
+    };
+  });
+}
+
+// Al cargar la fecha del evento se completan solas las otras dos.
+document.addEventListener('DOMContentLoaded', () => {
+  const fe = document.getElementById('f_fechaEvento');
+  if (!fe) return;
+  fe.addEventListener('change', () => {
+    if (!fe.value) return;
+    const fa = document.getElementById('f_fecha');
+    const fj = document.getElementById('f_fechaEjec');
+    if (fa && !fa.value) fa.value = calSumaDias(fe.value, -16);
+    if (fj && !fj.value) fj.value = calSumaDias(fe.value, -13);
+  });
+});
 </script>
 </body>
 </html>
