@@ -148,7 +148,7 @@
 
   .tab{display:inline-flex;align-items:center;gap:7px;}
   .tab-num{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;
-    padding:0 5px;border-radius:999px;background:#2a3a5c;color:var(--muted);
+    padding:0 5px;border-radius:999px;background:var(--danger);color:#fff;
     font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.62rem;font-weight:700;line-height:1;}
   .tab.active .tab-num{background:rgba(26,20,8,.22);color:#1a1408;}
   .tab-num.hay-vencidas{background:var(--danger);color:#fff;}
@@ -497,7 +497,13 @@ function decodeFields(fields){
 
 async function fsList(){
   const res = await fetch(`${BASE_URL}?key=${API_KEY}&pageSize=300`);
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error((data && data.error && data.error.message) || ('HTTP ' + res.status));
+    err.httpStatus = res.status;
+    err.fsStatus = data && data.error && data.error.status;
+    throw err;
+  }
   if (!data.documents) return [];
   return data.documents.map(doc => {
     const id = doc.name.split("/documents/")[1].split("/").pop();
@@ -853,7 +859,7 @@ function renderInforme(){
       <select id="infAnio"><option value="">Todos los años</option>${anios.map(a=>`<option value="${a}"${a===infAnio?" selected":""}>${a}</option>`).join("")}</select>
       <select id="infMes"><option value="">Todos los meses</option>${MESES_EJEC.map(m=>`<option value="${m.v}"${m.v===infMes?" selected":""}>${m.l}</option>`).join("")}</select>
       <select id="infTipo"><option value="">Todos los tipos</option>${tipos.map(tp=>`<option value="${escAttr(tp)}"${tp===infTipo?" selected":""}>${esc(tp)}</option>`).join("")}</select>
-      <button class="btn small secondary" id="infCSV">⤓ Bajar el informe</button>
+      <button class="btn small secondary" id="infCSV">⤓ Descargar el informe</button>
     </div>`;
 
   if(!comps.length){
@@ -921,7 +927,14 @@ async function loadData(){
     checkVencidas();
     vaciarColaAlertas();
   }catch(e){
-    $("connStatus").textContent = "Error de conexión con Firestore: " + e.message;
+    // Nunca se vacia allTareas: en pantalla quedan las ultimas tareas buenas.
+    const cuota = e.httpStatus === 429 || e.fsStatus === 'RESOURCE_EXHAUSTED';
+    const el = $("connStatus");
+    el.style.color = '#ff8a7a';
+    el.textContent = cuota
+      ? "Cuota de Firestore agotada — las tareas estan intactas, se repone a la medianoche del Pacifico"
+      : "Error de conexion con Firestore: " + e.message + " — mostrando la ultima lectura buena";
+    if (cuota) esperaLargaPorCuota();
     console.error(e);
   }
 }
@@ -940,8 +953,21 @@ async function checkVencidas(){
 }
 function startPolling(){
   loadData();
-  pollTimer = setInterval(loadData, 5000);
+  pollTimer = setInterval(tickPolling, 60000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) tickPolling();
+  });
 }
+// Solo lee si la pestana esta visible. Evita quemar la cuota con la app abierta de fondo.
+let esperaHasta = 0;
+function tickPolling(){
+  if (document.hidden) return;
+  if (Date.now() < esperaHasta) return;
+  const el = $("connStatus"); if (el) el.style.color = '';
+  loadData();
+}
+// Tras un 429, espera 5 minutos antes de volver a intentar.
+function esperaLargaPorCuota(){ esperaHasta = Date.now() + 5*60*1000; }
 
 // ============================================================
 // ADJUNTOS: previsualizacion y descarga
