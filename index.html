@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Babel — Panel de Diseño</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2213%22%20fill%3D%22%23e0218a%22%2F%3E%3Ctext%20x%3D%2232%22%20y%3D%2247%22%20font-family%3D%22Georgia%2CTimes%20New%20Roman%2Cserif%22%20font-size%3D%2244%22%20font-weight%3D%22700%22%20text-anchor%3D%22middle%22%20fill%3D%22%23101a2b%22%3EB%3C%2Ftext%3E%3C%2Fsvg%3E">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Quattrocento:wght@400;700&family=Archivo:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -161,10 +162,10 @@
   .cal-mes{font-family:'Quattrocento',Georgia,serif;font-size:1.15rem;font-weight:700;
     color:var(--gold);min-width:190px;text-transform:capitalize;}
   .cal-capas{display:flex;gap:14px;margin-left:auto;flex-wrap:wrap;}
-  .cal-capa{display:inline-flex;align-items:center;gap:7px;cursor:pointer;user-select:none;
+  .cal-capa{display:flex;align-items:flex-start;gap:7px;cursor:pointer;user-select:none;
     font-size:.8rem;color:var(--muted);}
-  .cal-capa input{accent-color:var(--gold);width:15px;height:15px;cursor:pointer;}
-  .cal-capa .pt{width:11px;height:11px;border-radius:3px;display:inline-block;}
+  .cal-capa input{accent-color:var(--gold);width:15px;height:15px;cursor:pointer;flex:0 0 15px;margin-top:1px;}
+  .cal-capa .pt{width:11px;height:11px;border-radius:3px;display:inline-block;flex:0 0 11px;margin-top:3px;}
   .cal-capa.off{opacity:.42;}
   .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:1px;background:#22304d;
     border:1px solid #22304d;border-radius:12px;overflow:hidden;}
@@ -183,10 +184,30 @@
     background:#1d2a44;color:var(--txt);transition:filter .12s;}
   .cal-chip:hover{filter:brightness(1.35);}
   .cal-chip b{font-weight:700;}
-  .cal-chip.diseno{border-left-color:#d0aa5e;background:rgba(208,170,94,.15);}
-  .cal-chip.marketing{border-left-color:#00908a;background:rgba(0,144,138,.17);}
-  .cal-chip.activacion{border-left-color:#4fae6a;background:rgba(79,174,106,.16);}
+  /* Un color por TIPO de evento. El mismo criterio que el tablero y que los
+     calendarios de Google, para que se lean igual en los dos lados. */
+  .cal-chip.t-revision  {border-left-color:#e8c765;background:rgba(232,199,101,.15);}
+  .cal-chip.t-aprobar   {border-left-color:#c47b1c;background:rgba(196,123,28,.18);}
+  .cal-chip.t-ejecutar  {border-left-color:#0f9b94;background:rgba(15,155,148,.18);}
+  .cal-chip.t-recordar  {border-left-color:#63cfc8;background:rgba(99,207,200,.15);}
+  .cal-chip.t-activacion{border-left-color:#4fae6a;background:rgba(79,174,106,.17);}
+  .cal-chip.t-suelta    {border-left-color:#8f7fc4;background:rgba(143,127,196,.15);}
   .cal-chip.venc{border-left-color:var(--danger);background:rgba(192,85,74,.2);}
+
+  /* Tablero de referencia */
+  .cal-tablero{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;
+    margin:0 0 12px;padding:12px;background:#141d31;border:1px solid var(--line);border-radius:10px;}
+  .cal-grupo{display:flex;flex-direction:column;gap:5px;}
+  .cal-grupo-cab{display:flex;align-items:center;gap:7px;font-size:.72rem;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--muted);padding-bottom:4px;border-bottom:1px solid var(--line);}
+  .cal-grupo-cab b{color:var(--txt);font-weight:700;}
+  .cal-grupo-cab .pt.gr{width:9px;height:9px;border-radius:50%;}
+  .cal-todo{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);
+    border-radius:5px;font-size:.6rem;padding:2px 6px;cursor:pointer;letter-spacing:.04em;
+    text-transform:none;font-family:inherit;}
+  .cal-todo:hover{border-color:var(--gold);color:var(--gold);}
+  .cal-lab{display:flex;flex-direction:column;line-height:1.25;}
+  .cal-lab i{font-style:normal;font-size:.63rem;color:var(--muted);}
   .cal-vacio{padding:26px;text-align:center;color:var(--muted);font-size:.86rem;}
   .cal-pie{margin-top:12px;font-size:.72rem;color:var(--muted);line-height:1.8;}
   @media(max-width:700px){
@@ -219,6 +240,7 @@
     <select id="filterTipo">
       <option value="">Todos los tipos</option>
       <option>Flyer</option>
+      <option>Anuncio</option>
       <option>Tarjetón</option>
       <option>Reel</option>
       <option>Post/Story</option>
@@ -256,6 +278,7 @@
       <label>Tipo de pieza</label>
       <select id="f_tipo">
         <option>Flyer</option>
+        <option>Anuncio</option>
         <option>Tarjetón</option>
         <option>Reel</option>
         <option>Post/Story</option>
@@ -312,9 +335,9 @@
       </select>
     </div>
     <div class="field">
-      <label>Fecha del evento o de la activación</label>
+      <label>Fecha objetivo</label>
       <input type="date" id="f_fechaEvento">
-      <div class="hint" id="hintFechas">Al cargarla se completan solas las fechas de abajo: aprobar = evento − 16 días · publicar = evento − 13 días. Podés editarlas después.</div>
+      <div class="hint" id="hintFechas">El día que manda: la fecha del evento, o el día en que la pieza tiene que estar publicada. Al cargarla se completan solas las fechas de abajo — podés editarlas después.</div>
     </div>
     <div class="field">
       <label>Fecha límite para aprobarla</label>
@@ -452,6 +475,8 @@ const PROJECT_ID = "babel-tareas";
 const API_KEY = "AIzaSyAZ25T-qhy-B_8M9QTCUh1dR18fiaPq0WQ";
 const COLLECTION = "tareas_diseno";
 const COLLECTION_COLA = "alertas_diseno_cola";
+// Documento latido: una sola fila que dice "algo cambio". Ver LATIDO mas abajo.
+const LATIDO_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/estado_panel/latido`;
 const BASE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`;
 const COLA_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION_COLA}`;
 
@@ -562,6 +587,8 @@ async function fsCreate(data){
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({fields: encodeFields(data)})
   });
+  bumpLatido();
+  acelerarPolling();
   return res.json();
 }
 async function fsUpdate(id, data){
@@ -570,10 +597,14 @@ async function fsUpdate(id, data){
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({fields: encodeFields(data)})
   });
+  bumpLatido();
+  acelerarPolling();
   return res.json();
 }
 async function fsDelete(id){
   await fetch(`${BASE_URL}/${id}?key=${API_KEY}`, {method: "DELETE"});
+  bumpLatido();
+  acelerarPolling();
 }
 
 // ============================================================
@@ -965,8 +996,22 @@ function engancharInforme(){
 async function loadData(){
   try{
     allTareas = await fsList();
+    ultimaCompleta = Date.now();
+
+    // Si no cambio nada, se espera un poco mas la proxima vez.
+    const huella = huellaDe(allTareas);
+    if (huella === ultimaHuella) pollEspera = Math.min(Math.round(pollEspera * 1.6), POLL_MAX);
+    else { pollEspera = POLL_MIN; ultimaHuella = huella; }
+
     const vencidas = allTareas.filter(t => diasVencida(t) > 0).length;
-    $("connStatus").textContent = `Sincronizado · ${allTareas.length} tarea(s)` + (vencidas ? ` · ${vencidas} vencida(s)` : "");
+    const el = $("connStatus");
+    el.textContent = `Sincronizado · ${allTareas.length} tarea(s)` + (vencidas ? ` · ${vencidas} vencida(s)` : "");
+    const latidos = Math.round(86400000 / POLL_MIN);                 // 1 lectura cada vez
+    const recon   = Math.round(86400000 / RECONCILIAR_CADA) * allTareas.length;
+    el.title = `Mira el latido cada minuto (1 lectura) y solo se trae las ${allTareas.length} tareas `
+             + `cuando algo cambió. Con la pestaña abierta todo el día son unas `
+             + `${(latidos + recon).toLocaleString('es-AR')} lecturas diarias más las de cada cambio real; `
+             + `el plan gratis da 50.000. Con la pestaña de fondo no lee nada.`;
     if(currentTab === "gantt") renderGantt();
     else if(currentTab === "informe") renderInforme();
     else if(currentTab === "calendario") renderCalendario();
@@ -983,6 +1028,10 @@ async function loadData(){
       : "Error de conexion con Firestore: " + e.message + " — mostrando la ultima lectura buena";
     if (cuota) esperaLargaPorCuota();
     console.error(e);
+  } finally {
+    // Pase lo que pase, el reloj sigue: una lectura fallida no puede dejar
+    // el panel congelado para siempre.
+    programarPolling(pollEspera);
   }
 }
 // Notificación única de "vencimiento": se dispara una sola vez por tarea, la primera vez
@@ -998,19 +1047,102 @@ async function checkVencidas(){
     }catch(e){ console.warn("No se pudo notificar vencimiento", e); }
   }
 }
+// ============================================================
+// EL LATIDO  —  leer 1 documento en vez de 52
+//
+// El problema: cada lectura del panel cuesta UNA lectura de Firestore POR
+// TAREA. Con 52 tareas y la pestana abierta todo el dia, mirar cada minuto
+// son ~75.000 lecturas diarias y el plan gratis da 50.000.
+//
+// La solucion: hay un solo documento, "estado_panel/latido", con un numero
+// adentro. Cada vez que alguien escribe una tarea, ese numero cambia. El
+// panel mira SOLO ese documento —una lectura— y recien si el numero cambio
+// se trae las 52 tareas. Si nadie toco nada, cuesta 1 lectura en vez de 52.
+//
+// Red de seguridad: igual se relee todo cada 15 minutos, por si algo escribio
+// sin avisar (un script, una carga masiva, otra pestana vieja).
+// ============================================================
+let latidoVisto = null;
+let ultimaCompleta = 0;
+const RECONCILIAR_CADA = 60 * 60 * 1000;   // red de seguridad, una vez por hora
+
+async function bumpLatido(){
+  try {
+    await fetch(`${LATIDO_URL}?key=${API_KEY}&updateMask.fieldPaths=version&updateMask.fieldPaths=cuando`, {
+      method: "PATCH",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({fields: {
+        version: {doubleValue: Date.now()},
+        cuando:  {stringValue: new Date().toISOString()}
+      }})
+    });
+  } catch(e){ /* si falla, el panel sigue andando con la reconciliacion */ }
+}
+
+// Devuelve: 'cambio' | 'igual' | 'sin-latido'
+async function mirarLatido(){
+  const res = await fetch(`${LATIDO_URL}?key=${API_KEY}`);
+  if (res.status === 404) return 'sin-latido';
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const doc = await res.json();
+  const v = doc.fields && doc.fields.version &&
+            (doc.fields.version.doubleValue ?? doc.fields.version.integerValue);
+  if (v === undefined || v === null) return 'sin-latido';
+  if (latidoVisto === null || String(v) !== String(latidoVisto)) { latidoVisto = v; return 'cambio'; }
+  return 'igual';
+}
+
+// ============================================================
+// RITMO DE LECTURA  —  cuidar la cuota de Firestore
+// Cada lectura cuesta UNA lectura de documento POR TAREA. Con 40 tareas
+// y el panel abierto todo el dia, leer cada minuto son ~57.600 lecturas
+// diarias: mas que las 50.000 del plan gratis. Por eso el panel afloja
+// solo cuando no pasa nada, y vuelve al toque apenas algo se mueve.
+// ============================================================
+const POLL_MIN = 60000;    // 1 minuto  — el ritmo cuando hay movimiento
+const POLL_MAX = 300000;   // 5 minutos — el ritmo cuando todo esta quieto
+let pollEspera = POLL_MIN;
+let ultimaHuella = "";
+
+function huellaDe(lista){
+  return lista.length + "|" +
+         lista.map(t => t.id + ":" + (t.updatedAt || 0)).sort().join(",");
+}
+function programarPolling(ms){
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(tickPolling, ms);
+}
+// Llamar despues de escribir: si el usuario esta trabajando, se lee rapido.
+function acelerarPolling(){
+  pollEspera = POLL_MIN;
+  programarPolling(POLL_MIN);
+}
 function startPolling(){
-  loadData();
-  pollTimer = setInterval(tickPolling, 60000);
+  // Se anota la version del latido de entrada, asi el primer tick no vuelve a
+  // traerse todas las tareas al pedo.
+  loadData().then(() => mirarLatido().catch(() => {}));
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) tickPolling();
+    if (!document.hidden) { pollEspera = POLL_MIN; tickPolling(); }
   });
 }
 // Solo lee si la pestana esta visible. Evita quemar la cuota con la app abierta de fondo.
 let esperaHasta = 0;
-function tickPolling(){
-  if (document.hidden) return;
-  if (Date.now() < esperaHasta) return;
+async function tickPolling(){
+  if (document.hidden)          { programarPolling(POLL_MIN); return; }
+  if (Date.now() < esperaHasta) { programarPolling(POLL_MIN); return; }
   const el = $("connStatus"); if (el) el.style.color = '';
+
+  try {
+    const estado = await mirarLatido();                       // 1 sola lectura
+    const tocaReconciliar = Date.now() - ultimaCompleta > RECONCILIAR_CADA;
+    if (estado === 'igual' && !tocaReconciliar){
+      pollEspera = POLL_MIN;                                  // barato: no hace falta aflojar
+      programarPolling(POLL_MIN);
+      return;
+    }
+  } catch(e){
+    // Si el latido no se puede leer, se sigue por el camino viejo.
+  }
   loadData();
 }
 // Tras un 429, espera 5 minutos antes de volver a intentar.
@@ -1848,17 +1980,64 @@ startPolling();
 // Reglas de fecha, contadas desde la fecha del evento:
 //   producto en revision = -19 | diseno listo = -16 | publicacion = -13 | recordatorio = -2
 // ============================================================
-const CAL_REGLAS = [
-  { dias:-19, capa:'diseno',     etiqueta:'Producto en revisión' },
-  { dias:-16, capa:'diseno',     etiqueta:'Diseño listo' },
-  { dias:-13, capa:'marketing',  etiqueta:'Publicar el post' },
-  { dias:-2,  capa:'marketing',  etiqueta:'Recordatorio' },
-  { dias:0,   capa:'activacion', etiqueta:'' }
-];
+// ============================================================
+// PLAZOS POR TIPO DE PIEZA  —  EDITAR ACA
+// Los numeros son dias ANTES de la fecha objetivo.
+//   revision  = cuando el producto tiene que estar para revisar
+//   aprobar   = cuando tiene que estar aprobado  (va al campo "Fecha limite para aprobarla")
+//   publicar  = cuando sale                      (va al campo "Fecha limite para ejecutarla")
+//   recordar  = recordatorio; null = esa pieza no lleva recordatorio
+// Cambiar un numero aca cambia el valor por defecto de todas las tareas nuevas.
+// Las fechas de cada tarea siguen siendo editables a mano, una por una.
+// ============================================================
+const PLAZOS = {
+  'Flyer':        { revision:-19, aprobar:-16, publicar:-13, recordar:-2 },
+  'Tarjetón':     { revision:-19, aprobar:-16, publicar:-13, recordar:-2 },
+  'Anuncio':      { revision:-19, aprobar:-16, publicar:-13, recordar:-2 },
+  'Vidriera':     { revision:-24, aprobar:-20, publicar:-15, recordar:null },
+  'Carta / Menú': { revision:-13, aprobar:-10, publicar:-7,  recordar:null },
+  'Atril':        { revision:-13, aprobar:-10, publicar:-7,  recordar:null },
+  'Big Box':      { revision:-13, aprobar:-10, publicar:-7,  recordar:null },
+  'Web':          { revision:-13, aprobar:-10, publicar:-5,  recordar:null },
+  'Reel':         { revision:-7,  aprobar:-4,  publicar:0,   recordar:null },
+  'Post/Story':   { revision:-7,  aprobar:-4,  publicar:0,   recordar:null },
+  'Otro':         { revision:-7,  aprobar:-4,  publicar:0,   recordar:null }
+};
+const PLAZO_DEFECTO = PLAZOS['Otro'];
+const plazosDe = (tipo) => PLAZOS[tipo] || PLAZO_DEFECTO;
+
+// (compatibilidad con la version anterior)
+// Los hitos del calendario salen de la misma tabla de arriba.
+function hitosDe(tipo){
+  const p = plazosDe(tipo);
+  const h = [
+    { clave:'revision', dias:p.revision, capa:'diseno',    etiqueta:'Producto en revisión' },
+    { clave:'aprobar',  dias:p.aprobar,  capa:'diseno',    etiqueta:'Fecha de aprobación' },
+    { clave:'ejecutar', dias:p.publicar, capa:'marketing', etiqueta:'Fecha de ejecución' }
+  ];
+  if (p.recordar !== null && p.recordar !== undefined) h.push({ clave:'recordar', dias:p.recordar, capa:'marketing', etiqueta:'Recordatorio' });
+  if (p.publicar !== 0) h.push({ clave:'activacion', dias:0, capa:'activacion', etiqueta:'Activación' });
+  return h;
+}
 const CAL_DOW = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const CAL_MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 let calMes = null;                       // {y, m}  m = 0-11
-let calCapas = { diseno:true, marketing:true, activacion:true };
+// Un interruptor por TIPO de evento, no por calendario: es lo que se prende
+// y apaga en el tablero de abajo del calendario.
+let calTipos = { revision:true, aprobar:true, ejecutar:true, recordar:true, activacion:true, suelta:true };
+
+// El tablero. Cada calendario agrupa sus tipos, y cada tipo tiene su color.
+const CAL_LEYENDA = [
+  { cal:'Diseño', color:'#d0aa5e', tipos:[
+      { k:'revision',   label:'Producto en revisión', color:'#e8c765', desc:'Tiene que haber algo para mirar' },
+      { k:'aprobar',    label:'Fecha de aprobación',  color:'#c47b1c', desc:'Último día para aprobarla' },
+      { k:'suelta',     label:'Sin fecha objetivo',   color:'#8f7fc4', desc:'Tareas viejas, en su fecha vigente' } ] },
+  { cal:'Publicaciones', color:'#00908a', tipos:[
+      { k:'ejecutar',   label:'Fecha de ejecución',   color:'#0f9b94', desc:'El día que la pieza sale' },
+      { k:'recordar',   label:'Recordatorio',         color:'#63cfc8', desc:'Aviso antes del evento' } ] },
+  { cal:'Activaciones', color:'#4fae6a', tipos:[
+      { k:'activacion', label:'Día de la activación', color:'#4fae6a', desc:'El evento en sí' } ] }
+];
 
 function calSumaDias(iso, n){
   if(!iso) return "";
@@ -1880,8 +2059,13 @@ function calMover(n){
   renderCalendario();
 }
 function calHoy(){ calMes = null; renderCalendario(); }
-function calToggle(capa){
-  calCapas[capa] = !calCapas[capa];
+function calToggle(tipo){
+  calTipos[tipo] = !calTipos[tipo];
+  renderCalendario();
+}
+function calSoloCal(nombre, prender){
+  (CAL_LEYENDA.find(g => g.cal === nombre) || {tipos:[]}).tipos
+    .forEach(t => { calTipos[t.k] = prender; });
   renderCalendario();
 }
 
@@ -1892,10 +2076,11 @@ function calEventos(){
 
   allTareas.forEach(t => {
     if (t.fechaEvento) {
-      CAL_REGLAS.forEach(r => {
+      hitosDe(t.tipo).forEach(r => {
         const iso = calSumaDias(t.fechaEvento, r.dias);
         push(iso, {
           capa: r.capa,
+          tipoEv: r.clave,
           texto: r.etiqueta ? r.etiqueta + ': ' + (t.titulo||'') : (t.titulo||''),
           titulo: t.titulo || '',
           id: t.id,
@@ -1907,6 +2092,7 @@ function calEventos(){
       const iso = fechaQueRige(t);
       if (iso) push(iso, {
         capa: 'diseno',
+        tipoEv: 'suelta',
         texto: (t.estado === 'Aprobada' ? 'Ejecutar: ' : 'Aprobar: ') + (t.titulo||''),
         titulo: t.titulo || '',
         id: t.id,
@@ -1928,11 +2114,23 @@ function renderCalendario(){
   let offset = primero.getUTCDay() - 1; if (offset < 0) offset = 6;   // lunes primero
   const inicio = new Date(Date.UTC(c.y, c.m, 1 - offset));
 
-  const capa = (k, color, label) => `
-    <label class="cal-capa ${calCapas[k] ? '' : 'off'}">
-      <input type="checkbox" data-capa="${k}" ${calCapas[k] ? 'checked' : ''}>
-      <span class="pt" style="background:${color}"></span>${label}
-    </label>`;
+  const tablero = CAL_LEYENDA.map(g => {
+    const todos = g.tipos.every(t => calTipos[t.k]);
+    return `
+    <div class="cal-grupo">
+      <div class="cal-grupo-cab">
+        <span class="pt gr" style="background:${g.color}"></span>
+        <b>${g.cal}</b>
+        <button class="cal-todo" data-cal="${escAttr(g.cal)}" data-on="${todos ? '0' : '1'}">${todos ? 'ninguno' : 'todos'}</button>
+      </div>
+      ${g.tipos.map(t => `
+        <label class="cal-capa ${calTipos[t.k] ? '' : 'off'}" title="${escAttr(t.desc)}">
+          <input type="checkbox" data-tipo="${t.k}" ${calTipos[t.k] ? 'checked' : ''}>
+          <span class="pt" style="background:${t.color}"></span>
+          <span class="cal-lab">${t.label}<i>${t.desc}</i></span>
+        </label>`).join('')}
+    </div>`;
+  }).join('');
 
   let html = `
     <div class="cal-top">
@@ -1942,12 +2140,8 @@ function renderCalendario(){
         <button class="btn small secondary" id="calNext">›</button>
       </div>
       <div class="cal-mes">${CAL_MESES[c.m]} ${c.y}</div>
-      <div class="cal-capas">
-        ${capa('diseno','#d0aa5e','Diseño')}
-        ${capa('marketing','#00908a','Marketing')}
-        ${capa('activacion','#4fae6a','Activaciones')}
-      </div>
     </div>
+    <div class="cal-tablero">${tablero}</div>
     <div class="cal-grid">
       ${CAL_DOW.map(d => `<div class="cal-dow">${d}</div>`).join('')}`;
 
@@ -1957,11 +2151,11 @@ function renderCalendario(){
     d.setUTCDate(d.getUTCDate() + i);
     const iso = d.toISOString().slice(0,10);
     const fuera = d.getUTCMonth() !== c.m;
-    const chips = (idx[iso] || []).filter(x => calCapas[x.capa]);
+    const chips = (idx[iso] || []).filter(x => calTipos[x.tipoEv]);
     total += fuera ? 0 : chips.length;
     html += `<div class="cal-dia ${fuera ? 'fuera' : ''} ${iso === hoy ? 'hoy' : ''}">
       <div class="cal-num">${d.getUTCDate()}</div>
-      ${chips.map(x => `<div class="cal-chip ${x.capa} ${x.vencida ? 'venc' : ''}" data-id="${escAttr(x.id)}" title="${escAttr(x.texto)}">${esc(x.texto)}</div>`).join('')}
+      ${chips.map(x => `<div class="cal-chip t-${x.tipoEv} ${x.vencida ? 'venc' : ''}" data-id="${escAttr(x.id)}" title="${escAttr(x.texto)}">${esc(x.texto)}</div>`).join('')}
     </div>`;
   }
   html += `</div>`;
@@ -1969,8 +2163,9 @@ function renderCalendario(){
   if (!total) html += `<div class="cal-vacio">No hay nada agendado en ${CAL_MESES[c.m]}. Cargá la <b>fecha del evento</b> en una tarea y aparecen sus cuatro hitos.</div>`;
 
   html += `<div class="cal-pie">
-    Producto en revisión = evento − 19 días · Diseño listo = evento − 16 · Publicar = evento − 13 · Recordatorio = evento − 2.<br>
-    Las tareas sin fecha de evento se muestran en su fecha vigente, en la capa Diseño.
+    Los días de antelación salen del <b>tipo de pieza</b> y se ven al cargarla. Un flyer arranca 19 días antes;
+    un reel, 7. Se cambian en la tabla <b>PLAZOS</b> del código, y la fecha de cada tarea sigue siendo editable a mano.<br>
+    Destildar un tipo lo esconde del calendario; no borra ni cambia nada.
   </div>`;
 
   const cont = $("calView");
@@ -1979,7 +2174,10 @@ function renderCalendario(){
   $("calNext").onclick = () => calMover(1);
   $("calHoy").onclick  = calHoy;
   cont.querySelectorAll('.cal-capa input').forEach(chk => {
-    chk.onchange = () => calToggle(chk.dataset.capa);
+    chk.onchange = () => calToggle(chk.dataset.tipo);
+  });
+  cont.querySelectorAll('.cal-todo').forEach(b => {
+    b.onclick = () => calSoloCal(b.dataset.cal, b.dataset.on === '1');
   });
   cont.querySelectorAll('.cal-chip').forEach(ch => {
     ch.onclick = () => {
@@ -1992,13 +2190,20 @@ function renderCalendario(){
 document.addEventListener('DOMContentLoaded', () => {
   const fe = document.getElementById('f_fechaEvento');
   if (!fe) return;
-  fe.addEventListener('change', () => {
+  const tp = document.getElementById('f_tipo');
+  const autocompletar = (pisar) => {
     if (!fe.value) return;
+    const p = plazosDe(tp ? tp.value : 'Otro');
     const fa = document.getElementById('f_fecha');
     const fj = document.getElementById('f_fechaEjec');
-    if (fa && !fa.value) fa.value = calSumaDias(fe.value, -16);
-    if (fj && !fj.value) fj.value = calSumaDias(fe.value, -13);
-  });
+    if (fa && (pisar || !fa.value)) fa.value = calSumaDias(fe.value, p.aprobar);
+    if (fj && (pisar || !fj.value)) fj.value = calSumaDias(fe.value, p.publicar);
+    const h = document.getElementById('hintFechas');
+    if (h) h.textContent = 'Con "' + (tp ? tp.value : '') + '": revisar ' + (-p.revision) + ' días antes, aprobar ' + (-p.aprobar) + ', publicar ' + (p.publicar === 0 ? 'el mismo día' : (-p.publicar) + ' antes') + '. Las fechas de abajo se pueden editar a mano.';
+  };
+  fe.addEventListener('change', () => autocompletar(false));
+  // Cambiar el tipo de pieza recalcula: cada pieza tiene su propio plazo.
+  if (tp) tp.addEventListener('change', () => autocompletar(true));
 });
 </script>
 </body>
