@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Babel · Activaciones (vista)</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='13' fill='%23e0218a'/%3E%3Ctext x='32' y='47' font-family='Georgia,serif' font-size='44' font-weight='700' text-anchor='middle' fill='%23101a2b'%3EB%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --navy:#101a2b; --navy2:#182742; --gold:#d0aa5e; --gold2:#e0c27a;
+    --bg:#0d1420; --card:#16213a; --card2:#1c2947; --txt:#f2ede2; --muted:#9aa6bd;
+    --linea:#24314f; --ok:#4fae6a; --alerta:#d6a24f; --off:#7d8aa8; --danger:#c0554a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);
+    font:15px/1.5 "Archivo",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+  header{text-align:center;padding:20px 16px 14px;background:linear-gradient(180deg,var(--navy),var(--navy2));
+    border-bottom:2px solid var(--gold)}
+  .marca{font:700 30px/1 Georgia,"Times New Roman",serif;letter-spacing:.14em;color:var(--gold);text-transform:uppercase}
+  .sub{margin-top:8px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold2);font-weight:700}
+  .solo-lectura{margin-top:8px;display:inline-block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);border:1px solid var(--linea);border-radius:999px;padding:3px 10px}
+  .wrap{max-width:860px;margin:0 auto;padding:18px 16px 50px}
+  .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+  .tab{padding:7px 14px;border-radius:20px;background:var(--card);color:var(--muted);cursor:pointer;
+    font-size:.8rem;font-weight:600;border:1px solid var(--linea)}
+  .tab.active{background:var(--gold);color:#1a1408;border-color:var(--gold)}
+  .card{background:var(--card);border:1px solid var(--linea);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+  .card h3{margin:0 0 6px;font:700 1.05rem/1.2 Georgia,serif;color:var(--txt)}
+  .meta{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.7rem;color:var(--muted);
+    display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .badge{display:inline-block;padding:2px 9px;border-radius:12px;font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:.64rem;font-weight:700;color:#0d1420}
+  .b-activa{background:var(--ok);color:#fff}
+  .b-fechas{background:var(--alerta)}
+  .b-susp{background:var(--off);color:#fff}
+  .b-canal{background:#2a3a5c;color:var(--muted)}
+  .cuando{margin-top:8px;font-size:.82rem;color:var(--gold2);font-weight:600}
+  .desc{font-size:.85rem;color:var(--muted);margin:8px 0 0;line-height:1.45}
+  .fechas{margin-top:8px;font-size:.72rem;color:var(--muted);font-family:"JetBrains Mono",ui-monospace,monospace}
+  .vacio{text-align:center;color:var(--muted);padding:36px 10px;font-size:.9rem}
+  .nota{font-size:.72rem;color:var(--muted);text-align:center;margin:14px 0 0;
+    font-family:"JetBrains Mono",ui-monospace,monospace}
+  .aviso{background:#20304f;border-left:3px solid var(--gold);padding:9px 12px;border-radius:6px;
+    font-size:.78rem;color:var(--gold2);margin-bottom:16px}
+  button.recargar{background:var(--card2);border:1px solid var(--linea);color:var(--txt);padding:7px 14px;
+    border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;font-family:inherit}
+  button.recargar:hover{border-color:var(--gold);color:var(--gold2)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="marca">Babel</div>
+  <div class="sub">Activaciones</div>
+  <div class="solo-lectura">Solo lectura</div>
+</header>
+
+<div class="wrap">
+  <div class="aviso">
+    Esta es una vista. Para editar, se usa la planilla y después <b>Babel → Actualizar Vista Bot</b>.
+    Lo que se ve acá es exactamente lo que el bot le cuenta al cliente.
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-f="org">Orgánico · lo que el bot ofrece</div>
+    <div class="tab" data-f="bb">Big Box · solo si preguntan</div>
+  </div>
+
+  <div id="lista"><div class="vacio">Leyendo la planilla…</div></div>
+  <div class="nota" id="estado"></div>
+  <div style="text-align:center;margin-top:14px;">
+    <button class="recargar" id="recargar">↻ Volver a leer</button>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbyHcRkJYKiktq_jOfX25zjxl2kBL7nGItPptwOAESGm8jYb2Hmq5aTpmdj9QVQqarOi/exec';
+const TOK = 'babel2026act';
+const OFFSET_BA = -3;
+const DIAS = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+let datos = {org: null, bb: null};
+let pestana = 'org';
+
+const esc = s => (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function ahoraBA(){ return new Date(Date.now() + OFFSET_BA*3600*1000); }
+function aUTC(v){
+  const s = String(v||'').trim(); let p;
+  if(s.indexOf('-')>0){ p=s.split('-'); return Date.UTC(+p[0], +p[1]-1, +p[2]); }
+  if(s.indexOf('/')>0){ p=s.split('/'); return Date.UTC(+p[2], +p[1]-1, +p[0]); }
+  return NaN;
+}
+function fechaTexto(v){
+  const t = aUTC(v); if(isNaN(t)) return '';
+  const d = new Date(t);
+  return DIAS[d.getUTCDay()] + ' ' + d.getUTCDate() + ' de ' + MESES[d.getUTCMonth()];
+}
+function diasHasta(v){
+  const t = aUTC(v); if(isNaN(t)) return null;
+  const a = ahoraBA();
+  return Math.round((t - Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate())) / 86400000);
+}
+function cuandoTexto(v){
+  const d = diasHasta(v);
+  if(d === null) return '';
+  if(d < 0) return 'ya pasó (' + fechaTexto(v) + ')';
+  if(d === 0) return 'hoy';
+  if(d === 1) return 'mañana, ' + fechaTexto(v);
+  const a = ahoraBA(), hastaDomingo = (7 - a.getUTCDay()) % 7;
+  if(d <= hastaDomingo) return 'este ' + fechaTexto(v);
+  if(d <= hastaDomingo + 7) return 'el ' + fechaTexto(v) + ', la semana que viene';
+  return 'el ' + fechaTexto(v);
+}
+function badgeEstado(e){
+  if(e === 'Activa') return '<span class="badge b-activa">ACTIVA</span>';
+  if(e === 'Suspendida') return '<span class="badge b-susp">SUSPENDIDA</span>';
+  return '<span class="badge b-fechas">FECHAS ESPECÍFICAS</span>';
+}
+
+function pintar(){
+  const cont = document.getElementById('lista');
+  const arr = datos[pestana];
+  if(arr === null){ cont.innerHTML = '<div class="vacio">Leyendo la planilla…</div>'; return; }
+  if(!arr.length){ cont.innerHTML = '<div class="vacio">No hay nada cargado en esta vista.</div>'; return; }
+
+  cont.innerHTML = arr.map(a => {
+    const sinFuturas = a.soloEstasFechas && (!a.fechas || !a.fechas.length);
+    const cuando = a.proximaFecha ? cuandoTexto(a.proximaFecha) : '';
+    const horario = a.horario ? ' a las ' + esc(a.horario) : '';
+    const listaFechas = (a.fechas && a.fechas.length)
+      ? '<div class="fechas">Fechas cargadas: ' + a.fechas.map(f => esc(fechaTexto(f) || f)).join(' · ') + '</div>' : '';
+    const alerta = sinFuturas
+      ? '<div class="fechas" style="color:var(--danger)">⚠ Está en "Fechas específicas" y no le queda ninguna fecha futura: el bot ya no la ofrece.</div>' : '';
+    return `<div class="card">
+      <h3>${esc(a.nombre || '(sin nombre)')}</h3>
+      <div class="meta">
+        ${badgeEstado(a.estado)}
+        <span class="badge b-canal">${esc((a.canal||'').toUpperCase())}</span>
+        <span>${esc(a.categoria || '')}</span>
+        ${a.dias ? '<span>· ' + esc(a.dias) + '</span>' : ''}
+      </div>
+      ${cuando ? `<div class="cuando">Próxima: ${esc(cuando)}${horario}</div>` : ''}
+      ${a.descripcion ? `<p class="desc">${esc(a.descripcion)}</p>` : '<p class="desc" style="color:var(--danger)">Sin descripción: por eso el bot no la ofrece.</p>'}
+      ${listaFechas}
+      ${alerta}
+    </div>`;
+  }).join('');
+}
+
+async function cargar(){
+  document.getElementById('estado').textContent = 'Leyendo…';
+  const t0 = Date.now();
+  try{
+    const [o, b] = await Promise.all([
+      fetch(`${API}?token=${TOK}&action=vistaBot`).then(r => r.json()),
+      fetch(`${API}?token=${TOK}&action=vistaBotBigBox`).then(r => r.json())
+    ]);
+    datos.org = o.activaciones || [];
+    datos.bb  = b.activaciones || [];
+    const a = ahoraBA();
+    const hh = String(a.getUTCHours()).padStart(2,'0') + ':' + String(a.getUTCMinutes()).padStart(2,'0');
+    document.getElementById('estado').textContent =
+      `${datos.org.length} orgánica(s) · ${datos.bb.length} de Big Box · leído a las ${hh} (Buenos Aires) en ${Date.now()-t0} ms`;
+  }catch(e){
+    document.getElementById('estado').textContent = 'No se pudo leer la planilla: ' + e.message;
+    datos.org = datos.org || []; datos.bb = datos.bb || [];
+  }
+  pintar();
+}
+
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  pestana = t.dataset.f;
+  pintar();
+}));
+document.getElementById('recargar').addEventListener('click', cargar);
+cargar();
+</script>
+</body>
+</html>
