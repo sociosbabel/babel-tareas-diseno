@@ -586,7 +586,16 @@ function calEtiqueta(estado){
 async function calCargar(){
   const est = document.getElementById('cal_estado');
   try{
-    const d = await jsonp(RESERVAS_URL + '?accion=bigbox&token=' + RESERVAS_TOKEN);
+    // fetch primero: el tag que usa JSONP manda las cookies de Google al endpoint
+    // de reservas y ahi la respuesta no se puede ejecutar. JSONP queda de reserva.
+    const url = RESERVAS_URL + '?accion=bigbox&token=' + RESERVAS_TOKEN;
+    let d;
+    try{
+      const r = await fetch(url);
+      d = await r.json();
+    }catch(_){
+      d = await jsonp(url);
+    }
     if(!d || !d.ok) throw new Error(d && d.error ? d.error : 'respuesta inesperada');
     CAL_DATOS = d;
     est.textContent = d.total + (d.total === 1 ? ' reserva Big Box en total.' : ' reservas Big Box en total.');
